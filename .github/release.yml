@@ -1,0 +1,15 @@
+# How GitHub groups a release's generated notes: each merged PR by its label, Dependabot's updates left out.
+changelog:
+  exclude:
+    labels:
+      - dependencies
+  categories:
+    - title: New
+      labels:
+        - enhancement
+    - title: Fixes
+      labels:
+        - bug
+    - title: Other changes
+      labels:
+        - "*"
