@@ -2,7 +2,7 @@ import type { EngineInterface } from 'claude-code'
 
 import type { Answer, Count, Read } from '../types'
 import { reasonOf } from './failed'
-import { ask, jsonIn } from './model'
+import { ask, jsonIn, MODEL } from './model'
 import { PLAN_READ_PROMPT } from './prompts'
 import { READ_KEY, resolve } from './state'
 import { readText } from './files'
@@ -85,8 +85,10 @@ export function countBoxes(text: string): Count {
   return { ticked: boxes.filter(b => b !== ' ').length, total: boxes.length }
 }
 
-// A text's identity for the read cache, with every box unticked so ticking one doesn't make it a new plan.
-export const textKey = (text: string) => hash(text.replace(new RegExp(BOX.source, 'gm'), '$1[ ]'))
+// A text's identity for the read cache: the model and prompt that read it, and the text with every box unticked so ticking
+// one doesn't make it a new plan. A changed prompt or model is a new key, so each plan is read again.
+export const textKey = (text: string, prompt = PLAN_READ_PROMPT, model = MODEL) =>
+  hash([model, prompt, text.replace(new RegExp(BOX.source, 'gm'), '$1[ ]')].join('\0'))
 
 // cyrb53: a fast 53-bit string hash, synchronous so the cache key needs no await.
 function hash(s: string) {
