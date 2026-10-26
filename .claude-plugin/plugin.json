@@ -1,0 +1,27 @@
+{
+  "name": "ortonom",
+  "version": "1.0.0-alpha.5",
+  "description": "Skills, commands, an output style, a sidebar and a focus status line for Claude Code.",
+  "author": {
+    "name": "ortonom"
+  },
+  "homepage": "https://github.com/ortonom/blazing-trails",
+  "repository": "https://github.com/ortonom/blazing-trails",
+  "license": "MIT",
+  "skills": [
+    "./skills/session/cold-read",
+    "./skills/session/fingerprint",
+    "./skills/repo/descatter",
+    "./skills/silent-failure/silent-failure"
+  ],
+  "types": "./types/index.d.ts",
+  "keywords": [
+    "skills",
+    "commands",
+    "output-style",
+    "statusline",
+    "focus",
+    "writing",
+    "review"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "modules": ["./register.tsx"],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p \"${CLAUDE_PLUGIN_DATA}\" && install -m 755 \"${CLAUDE_PLUGIN_ROOT}/statusline/statusline.sh\" \"${CLAUDE_PLUGIN_ROOT}/statusline/subagent-statusline.sh\" \"${CLAUDE_PLUGIN_DATA}/\""
+          }
+        ]
+      }
+    ]
+  }
+}

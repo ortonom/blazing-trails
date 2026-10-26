@@ -1,0 +1,29 @@
+# A release for each version: when main's plugin.json names a version with no release yet, this publishes one, tagged
+# ortonom--v<version> as `claude plugin tag` names it, and marked pre-release while the version has a -alpha or -beta.
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Release the version if it is new
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(jq -r .version .claude-plugin/plugin.json)
+          tag="ortonom--v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag is already released"
+            exit 0
+          fi
+          pre=()
+          case $version in *-*) pre=(--prerelease) ;; esac
+          gh release create "$tag" --target "$GITHUB_SHA" --title "ortonom $version" --generate-notes "${pre[@]}"

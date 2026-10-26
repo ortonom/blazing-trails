@@ -1,0 +1,15 @@
+host-checks: all
+
+checks:
+  - run: bin/check-public
+    slot: before-push
+    paths: ["**"]
+    protects: no email address, secret or session data in any file git would commit
+  - run: bin/check-version
+    slot: before-push
+    paths: ["**"]
+    protects: a change to what ships carries a new version, so installs update
+  - run: npm test
+    slot: before-push
+    paths: ["**"]
+    protects: the plugin validates, and every TypeScript and shell suite passes

@@ -1,0 +1,28 @@
+# The checks every PR runs.
+name: Checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          base=https://github.com/gitleaks/gitleaks/releases/download/v8.30.1
+          curl -sSfLO "$base/gitleaks_8.30.1_linux_x64.tar.gz"
+          curl -sSfL "$base/gitleaks_8.30.1_checksums.txt" | grep ' gitleaks_8.30.1_linux_x64.tar.gz$' | sha256sum -c -
+          sudo tar -xzf gitleaks_8.30.1_linux_x64.tar.gz -C /usr/local/bin gitleaks
+      # The Claude Code users run, unpinned, so a release that breaks the plugin fails here before it reaches them.
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@latest
+      - run: npm test
+      - run: bin/check-public
+      - run: bin/check-version "origin/$GITHUB_BASE_REF"

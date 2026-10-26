@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# The version check every PR passes: a branch that changes what the plugin ships changes `version` in plugin.json, since
+# an install updates only when the version does. $1 is the branch it merges into, origin/main unless named.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+into=${1:-origin/main}
+
+if ! base=$(git merge-base HEAD "$into" 2>/dev/null); then
+  echo "check-version: no common commit with $into; fetch it first" >&2
+  exit 1
+fi
+
+# Everything ships but the repo's own docs, checks, tests and tools.
+shipped=$(git diff --name-only "$base" HEAD -- . \
+  ':!tests' ':!scripts' ':!bin' ':!.github' ':!.claude' ':!*.test.*' ':!.gitignore' ':!package.json' ':!merge-worktree.yaml' \
+  ':!README.md' ':!CONTRIBUTING.md' ':!CODE_OF_CONDUCT.md' ':!SECURITY.md' ':!SCOPE.md' ':!GLOSSARY.md' ':!LICENSE')
+[ -n "$shipped" ] || exit 0
+
+version() { git show "$1:.claude-plugin/plugin.json" | jq -r .version; }
+now=$(version HEAD)
+if [ "$(version "$base")" = "$now" ]; then
+  echo "check-version: these files ship and version is still $now; bump it in .claude-plugin/plugin.json:" >&2
+  sed 's/^/  /' <<< "$shipped" >&2
+  exit 1
+fi

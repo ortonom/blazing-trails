@@ -1,0 +1,15 @@
+{
+  "name": "blazing-trails",
+  "owner": {
+    "name": "ortonom"
+  },
+  "description": "The marketplace for the ortonom plugin.",
+  "plugins": [
+    {
+      "name": "ortonom",
+      "source": "./",
+      "category": "productivity",
+      "description": "Skills, commands, an output style, a sidebar and a focus status line for Claude Code."
+    }
+  ]
+}

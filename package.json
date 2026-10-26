@@ -1,0 +1,7 @@
+{
+  "name": "blazing-trails",
+  "private": true,
+  "scripts": {
+    "test": "scripts/test.sh"
+  }
+}

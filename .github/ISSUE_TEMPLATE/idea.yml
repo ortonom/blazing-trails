@@ -1,0 +1,10 @@
+name: Idea
+description: A change, judged against SCOPE.md.
+labels: [needs-triage]
+body:
+  - type: textarea
+    attributes:
+      label: The failure behind it
+      description: The real session where the lack of it went wrong.
+    validations:
+      required: true

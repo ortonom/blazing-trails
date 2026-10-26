@@ -1,0 +1,10 @@
+name: Bug
+description: Something a skill, a command, the sidebar or the status line did wrong in a real session.
+labels: [needs-triage]
+body:
+  - type: textarea
+    attributes:
+      label: What happened
+      description: What you ran, what it did, what you expected. Leave out client names, paths and transcripts.
+    validations:
+      required: true
