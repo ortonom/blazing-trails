@@ -138,13 +138,18 @@ export async function offered(port: Port, offer: Offer, result: unknown, cwd: st
   return at(offer.issue, typeof out.stdout === 'string' ? out.stdout : null)
 }
 
-// A candidate read, or taken from the cache when its text was read before, then landed.
+// A candidate read, or taken from the cache when its text was read before, then landed. A hit is written back, which
+// renews the entry's `at`, so prune drops the entries nobody uses and keeps the ones in use.
 export async function consider(port: Port, reads: PlanReads, offer: Candidate, land: Land) {
   const c = { ...offer, text: offer.text.slice(0, MOST) }
-  if ((reads.tries.get(textKey(c.text)) ?? 0) >= TRIES) return
+  const key = textKey(c.text)
+  if ((reads.tries.get(key) ?? 0) >= TRIES) return
   const n = ++reads.latest
-  const cached = await port.cached(textKey(c.text))
-  if (cached) return landed(reads, n, c, cached, land)
+  const cached = await port.cached(key)
+  if (cached) {
+    await port.cache(key, cached)
+    return landed(reads, n, c, cached, land)
+  }
   port.later(() => attempt(port, reads, n, c, land).catch(err => untried(port, reads, c, err)))
 }
 

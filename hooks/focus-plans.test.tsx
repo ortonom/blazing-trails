@@ -2,6 +2,7 @@
 import { expect, test } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
 
+import { textKey } from './plan-read'
 import { PLAN, PLAN_MODE, boxes, planText, reader, world, started, say, readFile, write, onPlan, turnDone, lastWritten, opening } from '../tests/fixtures/focus-world'
 
 test('a plan whose done is checkboxes names the plan, and is clear once 3 turns are on it', async ($, on) => {
@@ -46,6 +47,19 @@ test('a plan read again with a box ticked keeps its 3 turns: it stays clear', as
 
   expect(asked).toHaveLength(1)
   expect(lastWritten(writes)).toEqual({ health: 10, level: 'clear', plan: 'p.md' })
+})
+
+test('a read answered from the cache renews its entry, so prune keeps a plan still in use', async ($, on) => {
+  const text = planText(3, 6)
+  const key = `focusV1read:${textKey(text)}`
+  const tenDaysAgo = 1_800_000_000_000 - 10 * 24 * 60 * 60 * 1000
+  const { saves, asked, clock } = world(on, { files: { [PLAN]: text }, isSaveCounted: true, stored: { [key]: { answer: reader(text), at: tenDaysAgo } } })
+  await started($)
+  await readFile($)
+  await clock.settle()
+
+  expect(asked).toEqual([])
+  expect(saves.filter(s => s.key === key).map(s => (s.value as { at: number }).at)).toEqual([1_800_000_000_000])
 })
 
 test('an approved plan is read after the tool call has returned', async ($, on) => {
