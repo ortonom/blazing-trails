@@ -25,7 +25,7 @@ test('a hook that fails says so in the transcript once, then in the debug log, a
   expect(await submit($, 'first')).toEqual({ text: 'first' })
   expect(await submit($, 'second')).toEqual({ text: 'second' })
 
-  const failures = logs.filter(l => l.text.startsWith('ortonom: prompt.submit hook failed:'))
+  const failures = logs.filter(l => l.text.startsWith('prompt.submit hook failed:'))
   expect(failures.map(l => l.to)).toEqual(['transcript', 'debug'])
   expect(failures[0]?.text).toContain('session.id')
 })

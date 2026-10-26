@@ -151,7 +151,7 @@ test('a read that throws is logged, and lands nothing', async () => {
   await settle()
 
   expect(landed).toEqual([])
-  expect(logs).toEqual(['ortonom: reading /w/p.md as a plan failed: read crashed'])
+  expect(logs).toEqual(['reading /w/p.md as a plan failed: read crashed'])
 })
 
 test('a read that keeps failing is tried at each turn end, four times in all, and logged twice', async () => {
@@ -165,7 +165,7 @@ test('a read that keeps failing is tried at each turn end, four times in all, an
 
   expect(asked).toHaveLength(4)
   expect(landed).toEqual([])
-  expect(logs).toEqual(["ortonom: couldn't read /w/p.md: a; retrying", "ortonom: couldn't read /w/p.md after 4 tries: d"])
+  expect(logs).toEqual(["couldn't read /w/p.md: a; retrying", "couldn't read /w/p.md after 4 tries: d"])
 })
 
 test('a slow read of a document never lands over a newer read of it', async () => {

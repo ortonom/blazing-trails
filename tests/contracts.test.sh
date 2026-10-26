@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # contracts.test.sh — names one side writes and another reads, which no single module owns: the state folder's file
 # names, shared by the hooks, the status line scripts and the prune; and the skill names the sidebar and the companions
-# list by hand, held to the skills the plugin ships.
+# list by hand, held to the skills the plugin ships; and the plugin's name on a log line, which Claude Code adds.
 set -u
 cd "$(dirname "$0")/.." || exit 2
 
@@ -32,6 +32,15 @@ listed=$( {
 
 check "the plugin ships skills" test -n "$shipped"
 check "every skill named by hand is one the plugin ships" test -z "$(comm -23 <(echo "$listed") <(echo "$shipped"))"
+
+# Claude Code puts the plugin's name in front of every line a plugin logs, so a logged text that starts with it shows
+# the name twice. Each text handed to a log call, by `$.ui.log` or the plan read's `log` port, in a shipped hook.
+logged() {
+  find hooks -type f \( -name '*.ts' -o -name '*.tsx' \) ! -name '*.test.*' -exec perl -0ne 'while (/\blog\(\s*[\x27"`]([^\x27"`\n]*)/g) { print "$ARGV: $1\n" }' {} +
+}
+
+check "the hooks log text" test -n "$(logged)"
+check "no logged text starts with the plugin's name, which Claude Code adds" test -z "$(logged | grep -E '^[^:]+: ortonom:')"
 
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

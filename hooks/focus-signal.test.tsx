@@ -73,7 +73,7 @@ test('a store that cannot save keeps the signal and says so once', async ($, on)
   await turnDone($, clock)
 
   expect(lastWritten(writes).plan).toBe('p.md')
-  expect(logs).toEqual(['ortonom: focus state not saved; it resets on resume'])
+  expect(logs).toEqual(['focus state not saved; it resets on resume'])
 })
 
 test('/clear starts over, and any other exit keeps the plan for a resume', async ($, on) => {
@@ -135,6 +135,6 @@ test('a file that cannot be written is said once, and written on a later turn', 
   await turnDone($, clock)
   await turnDone($, clock)
 
-  expect(logs).toEqual([`ortonom: ${FILE} not written; a status line reading it shows an older signal or none`])
+  expect(logs).toEqual([`${FILE} not written; a status line reading it shows an older signal or none`])
   expect(writes.length).toBeGreaterThan(0)
 })

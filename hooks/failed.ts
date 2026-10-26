@@ -15,7 +15,7 @@ export const reasonOf = (why: unknown) => {
 // every time. It never throws, so a catch that calls it still hands the event on.
 export function failed($: EngineInterface, where: string, why: unknown) {
   try {
-    $.ui.log(`ortonom: ${where} failed: ${reasonOf(why)}`, told.has(where) ? { to: 'debug' } : undefined)
+    $.ui.log(`${where} failed: ${reasonOf(why)}`, told.has(where) ? { to: 'debug' } : undefined)
   } catch {}
   told.add(where)
 }

@@ -63,5 +63,5 @@ test('a prune that fails says so', async ($, on) => {
   await $.session.start({ source: 'startup', cwd: '/w' } as never)
   await clock.settle()
 
-  expect(logs).toContain('ortonom: pruning old state files failed: find: permission denied')
+  expect(logs).toContain('pruning old state files failed: find: permission denied')
 })

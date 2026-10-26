@@ -186,7 +186,7 @@ test('a failed, aborted or refused read leaves no plan, logs one line and retrie
   await readFile($)
   await clock.settle()
   expect(lastWritten(writes).plan).toBe('')
-  expect(logs).toEqual([`ortonom: couldn't read ${PLAN}: aborted; retrying`])
+  expect(logs).toEqual([`couldn't read ${PLAN}: aborted; retrying`])
 
   await turnDone($, clock)
   await turnDone($, clock)

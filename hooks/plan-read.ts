@@ -156,7 +156,7 @@ export function retryPending(port: Port, reads: PlanReads, land: Land) {
 // A read that threw leaves the pending reads, and is said once.
 function untried(port: Port, reads: PlanReads, c: Candidate, err: unknown) {
   reads.pending.delete(c.source)
-  port.log(`ortonom: reading ${c.source} as a plan failed: ${reasonOf(err)}`)
+  port.log(`reading ${c.source} as a plan failed: ${reasonOf(err)}`)
 }
 
 // One plan read of a candidate: a failed one waits for the turn's end to be tried again, at most TRIES times a text.
@@ -168,10 +168,10 @@ async function attempt(port: Port, reads: PlanReads, n: number, c: Candidate, la
     reads.tries.set(k, tried)
     if (tried >= TRIES) {
       reads.pending.delete(c.source)
-      port.log(`ortonom: couldn't read ${c.source} after ${tried} tries: ${answer.reason}`)
+      port.log(`couldn't read ${c.source} after ${tried} tries: ${answer.reason}`)
       return
     }
-    if (!reads.pending.has(c.source)) port.log(`ortonom: couldn't read ${c.source}: ${answer.reason}; retrying`)
+    if (!reads.pending.has(c.source)) port.log(`couldn't read ${c.source}: ${answer.reason}; retrying`)
     reads.pending.set(c.source, { ...c, n })
 
     return
