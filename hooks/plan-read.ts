@@ -138,8 +138,8 @@ export async function offered(port: Port, offer: Offer, result: unknown, cwd: st
   return at(offer.issue, typeof out.stdout === 'string' ? out.stdout : null)
 }
 
-// A candidate read, or taken from the cache when its text was read before, then landed. A hit is written back, which
-// renews the entry's `at`, so prune drops the entries nobody uses and keeps the ones in use.
+// A candidate read, or taken from the cache when its text was read before, then landed. A hit is written back without
+// the landing waiting for it, which renews the entry's `at`, so prune drops the entries nobody uses and keeps the ones in use.
 export async function consider(port: Port, reads: PlanReads, offer: Candidate, land: Land) {
   const c = { ...offer, text: offer.text.slice(0, MOST) }
   const key = textKey(c.text)
@@ -147,7 +147,7 @@ export async function consider(port: Port, reads: PlanReads, offer: Candidate, l
   const n = ++reads.latest
   const cached = await port.cached(key)
   if (cached) {
-    await port.cache(key, cached)
+    port.cache(key, cached).catch(() => undefined)
     return landed(reads, n, c, cached, land)
   }
   port.later(() => attempt(port, reads, n, c, land).catch(err => untried(port, reads, c, err)))
@@ -169,9 +169,9 @@ function untried(port: Port, reads: PlanReads, c: Candidate, err: unknown) {
 
 // One plan read of a candidate: a failed one waits for the turn's end to be tried again, at most TRIES times a text.
 async function attempt(port: Port, reads: PlanReads, n: number, c: Candidate, land: Land) {
+  const k = textKey(c.text)
   const answer = await port.read(c.text)
   if ('reason' in answer) {
-    const k = textKey(c.text)
     const tried = (reads.tries.get(k) ?? 0) + 1
     reads.tries.set(k, tried)
     if (tried >= TRIES) {
@@ -184,8 +184,8 @@ async function attempt(port: Port, reads: PlanReads, n: number, c: Candidate, la
 
     return
   }
-  reads.tries.delete(textKey(c.text))
-  await port.cache(textKey(c.text), answer)
+  reads.tries.delete(k)
+  await port.cache(k, answer)
   await landed(reads, n, c, answer, land)
 }
 

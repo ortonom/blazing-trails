@@ -151,6 +151,17 @@ test('a plan lands as a read of its source, goal, done and done boxes', async ()
   expect(landed).toEqual([{ type: 'read', source: '/w/p.md', goal: 'Ship the bar', done: 'tests pass', paths: [], boxes: 3, cwd: '/w', home: HOME }])
 })
 
+test('a cached read lands though renewing its entry fails', async () => {
+  const { port, reads, land, landed, asked, cache, settle } = world()
+  cache.set(textKey(TEXT), { isPlan: true, goal: 'Cached', done: 'tests pass', paths: [] })
+  port.cache = () => Promise.reject(new Error('clock down'))
+  await consider(port, reads, at('/w/p.md', TEXT), land)
+  await settle()
+
+  expect(asked).toEqual([])
+  expect(landed.map(r => r.goal)).toEqual(['Cached'])
+})
+
 test('a text read once is not read again, a ticked box included', async () => {
   const { port, reads, land, landed, asked, settle } = world()
   await consider(port, reads, at('/w/p.md', plan('g')), land)
