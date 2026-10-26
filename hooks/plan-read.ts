@@ -2,7 +2,8 @@ import type { EngineInterface } from 'claude-code'
 
 import type { Answer, Count, Read } from '../types'
 import { reasonOf } from './failed'
-import { ask, jsonIn, promptFile } from './model'
+import { ask, jsonIn, MODEL } from './model'
+import { PLAN_READ_PROMPT } from './prompts'
 import { READ_KEY, resolve } from './state'
 import { readText } from './files'
 import type { Offer } from './tool-call'
@@ -58,7 +59,7 @@ export function portOf($: EngineInterface): Port {
 // One read of a text as a plan: whether it is one, its goal, its done, its done boxes and the paths it names, or why
 // the read found nothing.
 async function readPlan($: EngineInterface, text: string): Promise<Answer | { reason: string }> {
-  const reply = await ask($, await promptFile($, 'plan-read.md'), text, 1500)
+  const reply = await ask($, PLAN_READ_PROMPT, text, 1500)
   if ('reason' in reply) return reply
 
   return parseAnswer(reply.text) ?? { reason: 'its answer was not the JSON asked for' }
@@ -84,8 +85,10 @@ export function countBoxes(text: string): Count {
   return { ticked: boxes.filter(b => b !== ' ').length, total: boxes.length }
 }
 
-// A text's identity for the read cache, with every box unticked so ticking one doesn't make it a new plan.
-export const textKey = (text: string) => hash(text.replace(new RegExp(BOX.source, 'gm'), '$1[ ]'))
+// A text's identity for the read cache: the model and prompt that read it, and the text with every box unticked so ticking
+// one doesn't make it a new plan. A changed prompt or model is a new key, so each plan is read again.
+export const textKey = (text: string, prompt = PLAN_READ_PROMPT, model = MODEL) =>
+  hash([model, prompt, text.replace(new RegExp(BOX.source, 'gm'), '$1[ ]')].join('\0'))
 
 // cyrb53: a fast 53-bit string hash, synchronous so the cache key needs no await.
 function hash(s: string) {
@@ -135,13 +138,18 @@ export async function offered(port: Port, offer: Offer, result: unknown, cwd: st
   return at(offer.issue, typeof out.stdout === 'string' ? out.stdout : null)
 }
 
-// A candidate read, or taken from the cache when its text was read before, then landed.
+// A candidate read, or taken from the cache when its text was read before, then landed. A hit is written back without
+// the landing waiting for it, which renews the entry's `at`, so prune drops the entries nobody uses and keeps the ones in use.
 export async function consider(port: Port, reads: PlanReads, offer: Candidate, land: Land) {
   const c = { ...offer, text: offer.text.slice(0, MOST) }
-  if ((reads.tries.get(textKey(c.text)) ?? 0) >= TRIES) return
+  const key = textKey(c.text)
+  if ((reads.tries.get(key) ?? 0) >= TRIES) return
   const n = ++reads.latest
-  const cached = await port.cached(textKey(c.text))
-  if (cached) return landed(reads, n, c, cached, land)
+  const cached = await port.cached(key)
+  if (cached) {
+    port.cache(key, cached).catch(() => undefined)
+    return landed(reads, n, c, cached, land)
+  }
   port.later(() => attempt(port, reads, n, c, land).catch(err => untried(port, reads, c, err)))
 }
 
@@ -161,9 +169,9 @@ function untried(port: Port, reads: PlanReads, c: Candidate, err: unknown) {
 
 // One plan read of a candidate: a failed one waits for the turn's end to be tried again, at most TRIES times a text.
 async function attempt(port: Port, reads: PlanReads, n: number, c: Candidate, land: Land) {
+  const k = textKey(c.text)
   const answer = await port.read(c.text)
   if ('reason' in answer) {
-    const k = textKey(c.text)
     const tried = (reads.tries.get(k) ?? 0) + 1
     reads.tries.set(k, tried)
     if (tried >= TRIES) {
@@ -176,8 +184,8 @@ async function attempt(port: Port, reads: PlanReads, n: number, c: Candidate, la
 
     return
   }
-  reads.tries.delete(textKey(c.text))
-  await port.cache(textKey(c.text), answer)
+  reads.tries.delete(k)
+  await port.cache(k, answer)
   await landed(reads, n, c, answer, land)
 }
 

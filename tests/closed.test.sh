@@ -8,7 +8,7 @@ pass=0 fail=0
 check() { local name=$1; shift; if "$@" >/dev/null 2>&1; then ((pass++)); echo "ok    $name"; else ((fail++)); echo "FAIL  $name"; "$@" 2>&1 | sed 's/^/      /'; fi }
 
 # What a person who installs the plugin gets loaded: its components, not its tests.
-shipped() { find skills commands agents output-styles hooks -type f \( -name '*.md' -o -name '*.ts' -o -name '*.tsx' \) ! -name '*.test.*'; ls statusline/*.sh skin.ts focus-read.md plan-read.md 2>/dev/null; }
+shipped() { find skills commands agents output-styles hooks -type f \( -name '*.md' -o -name '*.ts' -o -name '*.tsx' \) ! -name '*.test.*'; ls statusline/*.sh skin.ts 2>/dev/null; }
 own=$( { jq -r '.skills[]' .claude-plugin/plugin.json | xargs -n1 basename; ls commands agents | sed 's/\.md$//'; echo sidebar; } | sort -u)
 
 # Each ortonom:<name> a shipped file names is one the plugin ships.
@@ -20,8 +20,9 @@ pinned() { grep -l '^model:' agents/*.md; }
 check "no agent pins a model"              test -z "$(pinned)"
 
 # Claude Code's own places are allowed; any other home-directory path in prose, or any absolute one, is someone's setup.
+# The prompts in hooks/prompts.ts are prose.
 home_paths() {
-  { shipped | grep '\.md$' | xargs grep -nE '~/'; shipped | xargs grep -nE '/Users/|/home/'; } | grep -vE '~/\.claude/(CLAUDE\.md|rules|state)'
+  { shipped | grep -E '\.md$|^hooks/prompts\.ts$' | xargs grep -nE '~/'; shipped | xargs grep -nE '/Users/|/home/'; } | grep -vE '~/\.claude/(CLAUDE\.md|rules|state)'
 }
 check "no home-directory path"             test -z "$(home_paths)"
 

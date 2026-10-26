@@ -15,8 +15,6 @@
 !types/**
 !skin.ts
 !settings.json
-!plan-read.md
-!focus-read.md
 !.gitignore
 !.claude/CLAUDE.md
 !GLOSSARY.md

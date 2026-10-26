@@ -1,6 +1,7 @@
 // How each turn is judged and scored: the levels, checks, corrections and a judge that fails.
 import { expect, test } from 'claude-code/testing'
 
+import { FOCUS_READ_PROMPT, PLAN_READ_PROMPT } from './prompts'
 import type { Verdict } from '../tests/fixtures/focus-world'
 import { PLAN, planText, world, started, ended, say, readFile, write, onPlan, turnDone, lastWritten, hpRow, opening } from '../tests/fixtures/focus-world'
 
@@ -324,9 +325,9 @@ test('edits outside the plan make a turn partly on goal, and the level fragmente
   expect(lastWritten(writes).level).toBe('fragmented')
 })
 
-test('the plan read is given plan-read.md and the turn judge focus-read.md', async ($, on) => {
+test("the plan read and the turn judge are given the plugin's prompts when every read of the plugin's folder fails", async ($, on) => {
   const { systems, clock } = await onPlan($, on, { verdicts: ['on'] })
   await turnDone($, clock)
 
-  expect(systems).toEqual(['Read this as a plan.', 'Judge this turn.'])
+  expect(systems).toEqual([PLAN_READ_PROMPT, FOCUS_READ_PROMPT])
 })

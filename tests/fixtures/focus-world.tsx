@@ -2,6 +2,7 @@
 // judges turns as each test tells it, and the steps a session takes.
 import { mock } from 'claude-code/testing'
 import type { Engine } from 'claude-code/testing'
+import { FOCUS_READ_PROMPT } from '../../hooks/prompts'
 import type { Answer, Judge } from '../../types'
 
 // after: how many milliseconds of the mocked clock the judge takes to answer.
@@ -95,16 +96,15 @@ export function world(
           ? { exitCode: 0, stdout: `${git.top}\n${git.common}\n`, stderr: '' }
           : { exitCode: 128, stdout: '', stderr: 'fatal: not a git repository' },
   }))
+  // A read of anything but the test's files fails, the plugin's own folder among it.
   on('fs.read', ($: any, e: any) => {
     if (e.path in files) return { value: files[e.path] }
-    const prompt = PROMPTS[e.path.split('/').pop()]
-    if (prompt) return { value: prompt }
     throw new Error(`ENOENT: ${e.path}`)
   })
   on('model.complete', async ($: any, e: any) => {
     systems.push(e.system)
     const usage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 }
-    if (e.system === PROMPTS['focus-read.md']) {
+    if (e.system === FOCUS_READ_PROMPT) {
       judged.push(e.prompt)
       const verdict = verdicts.shift() ?? 'unknown'
       if (verdict === 'reject') throw new Error('model blocked')
@@ -145,9 +145,6 @@ export function world(
 
   return { files, asked, judged, logs, clock, writes, systems, saves, session }
 }
-
-// The plugin's prompt files, as the plan read and the turn judge find them in its folder.
-const PROMPTS: Record<string, string> = { 'plan-read.md': 'Read this as a plan.', 'focus-read.md': 'Judge this turn.' }
 
 export const started = ($: Engine) => $.session.start({ source: 'startup', cwd: '/w' } as never)
 export const ended = ($: Engine, answer = '') => $.turn.complete({ answer, durationMs: 1, isAborted: false, turnId: 't', reason: 'answer' } as never)
