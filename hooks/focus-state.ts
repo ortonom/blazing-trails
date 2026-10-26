@@ -130,7 +130,7 @@ async function applyNow($: EngineInterface, events: Event[]) {
     try {
       await $.store.set(await key($), { state, at: await $.clock.now() })
     } catch {
-      if (!isSaveTold) $.ui.log('ortonom: focus state not saved; it resets on resume')
+      if (!isSaveTold) $.ui.log('focus state not saved; it resets on resume')
       isSaveTold = true
     }
   }
@@ -162,7 +162,7 @@ async function publish($: EngineInterface, state: State) {
     await $.fs.write(path, `${text}\n`)
     lastWrite = write
   } catch {
-    if (!isWriteTold) $.ui.log(`ortonom: ${path} not written; a status line reading it shows an older signal or none`)
+    if (!isWriteTold) $.ui.log(`${path} not written; a status line reading it shows an older signal or none`)
     isWriteTold = true
   }
 }
