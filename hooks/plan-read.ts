@@ -2,7 +2,8 @@ import type { EngineInterface } from 'claude-code'
 
 import type { Answer, Count, Read } from '../types'
 import { reasonOf } from './failed'
-import { ask, jsonIn, promptFile } from './model'
+import { ask, jsonIn } from './model'
+import { PLAN_READ_PROMPT } from './prompts'
 import { READ_KEY, resolve } from './state'
 import { readText } from './files'
 import type { Offer } from './tool-call'
@@ -58,7 +59,7 @@ export function portOf($: EngineInterface): Port {
 // One read of a text as a plan: whether it is one, its goal, its done, its done boxes and the paths it names, or why
 // the read found nothing.
 async function readPlan($: EngineInterface, text: string): Promise<Answer | { reason: string }> {
-  const reply = await ask($, await promptFile($, 'plan-read.md'), text, 1500)
+  const reply = await ask($, PLAN_READ_PROMPT, text, 1500)
   if ('reason' in reply) return reply
 
   return parseAnswer(reply.text) ?? { reason: 'its answer was not the JSON asked for' }

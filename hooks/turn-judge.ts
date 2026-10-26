@@ -1,7 +1,8 @@
 import type { EngineInterface } from 'claude-code'
 
 import type { Edits, Goal, Judge, Row, State } from '../types'
-import { ask, jsonIn, promptFile } from './model'
+import { ask, jsonIn } from './model'
+import { FOCUS_READ_PROMPT } from './prompts'
 import type { Call } from './scorecard'
 import { goalOf } from './state'
 
@@ -41,7 +42,7 @@ const READ_MS = 30_000
 // One read of whether a turn served the goal, and of the person's corrections and repeats; with no goal it only marks the
 // person's message, and any failure, a reply without the correction and repeat marks among them, is unknown and unmarked.
 export async function judgeTurn($: EngineInterface, c: ReadContext, hasGoal: boolean): Promise<{ verdict: Judge; marks: Marks | null }> {
-  const reply = await ask($, await promptFile($, 'focus-read.md'), readPrompt(c), 120, READ_MS)
+  const reply = await ask($, FOCUS_READ_PROMPT, readPrompt(c), 120, READ_MS)
   if ('reason' in reply) return { verdict: 'unknown', marks: null }
   const json = jsonIn(reply.text)
   const marks = parseMarks(json)
