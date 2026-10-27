@@ -8,6 +8,9 @@ Blazing Trails sidebar.
 The plugin is in alpha: releases run `1.0.0-alpha.N`, then `1.0.0-beta.N`, then `1.0.0`, and anything may change
 before `1.0.0`.
 
+It needs Claude Code 2.1.311 or newer. Every change is tested against the newest Claude Code release, and the hooks
+API the sidebar and status line build on is early access, so an older Claude Code can skip their hooks.
+
 ```
 /plugin marketplace add ortonom/blazing-trails
 /plugin install ortonom@blazing-trails
@@ -160,6 +163,18 @@ A small model reads each plan once, and judges each turn against the plan, or ag
 message while there is no plan; checks, "done" claims, confirms and interrupts are read from the
 turn itself. `STATUSLINE_STATE` names another folder for the file; otherwise `CLAUDE_CONFIG_DIR`
 stands in for `~/.claude`.
+
+## What it runs
+
+- **Model calls**: Haiku, through your Claude Code session and on its usage. It reads each plan's text once, and
+  judges each turn from the goal, your recent messages, shortened, and Claude's answer.
+- **Commands**: `git rev-parse` in the session's folder. The status line runs `git`, and `gh pr list` for the
+  branch's PR in a background process whose answer it keeps for 5 minutes. Each session start copies the two
+  status-line scripts into the plugin's data folder.
+- **Files**: `focus-<session>.json`, `worktrees-<session>`, `agents-<session>` and `pr-*` in `~/.claude/state`, or the
+  folder `STATUSLINE_STATE` names. Each session start deletes the ones older than 14 days.
+- **Network**: only the model calls above, through Claude Code, and `gh`, to GitHub. The plugin hooks no telemetry
+  and sends no analytics.
 
 ## Licence
 
