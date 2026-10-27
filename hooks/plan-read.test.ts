@@ -74,7 +74,7 @@ const TEXT = plan('Ship the bar')
 for (const [what, key] of [
   ['prompt', textKey(TEXT, 'an older prompt')],
   ['model', textKey(TEXT, PLAN_READ_PROMPT, 'an older model')],
-]) {
+] as const) {
   test(`an answer cached under another ${what} is not reused`, async () => {
     const { port, reads, land, landed, asked, cache, settle } = world()
     cache.set(key, { isPlan: true, goal: 'Stale', done: 'old', paths: [] })
