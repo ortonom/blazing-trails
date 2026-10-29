@@ -25,6 +25,8 @@ Run one search per role below, all three in one message, each built from the gis
 
 Plain-problem wording returns how-to articles; only Name and Practice wording return names. Keep the three queries distinct.
 
+Inside an app, the name is the app's own term, such as a Workflow in GoHighLevel: look it up in the names its API or MCP returns, then its documentation, before a web search.
+
 Done when: all three searches ran; each candidate has source usage and a feature fit, or is marked unsupported.
 
 ## 3. Ladder if needed
