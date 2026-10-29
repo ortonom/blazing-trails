@@ -36,7 +36,7 @@ export const skin = {
   about: {
     open: 'Open this with /sidebar',
     version: 'Version',
-    style: { name: 'structured', means: 'on while the plugin is on, in place of the one chosen in /config' },
+    style: { name: 'structured', means: 'on when chosen with /output-style' },
     guide: 'How HP is scored, each level and the ☰ plan row: github.com/ortonom/blazing-trails',
     companionsHeading: 'Used when installed',
     writesHeading: 'What it writes and spends',

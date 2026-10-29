@@ -64,9 +64,8 @@ Each command and skill answers to its bare name; where another command already h
 
 ### Output style: `structured`
 
-Structured writing: replies lead with the answer, and each part takes the format its reader
-needs: a diff for a change, a table for a comparison, a tree for a hierarchy, a numbered list for
-steps, prose for an explanation. It applies whenever the plugin is enabled, in place of any style chosen under `/config`.
+Structured writing: replies lead with the answer in plain words, with a diff for a change, a table
+for a comparison, a numbered list for steps and prose for the rest. Choose it with `/output-style`.
 
 ### The status line
 
