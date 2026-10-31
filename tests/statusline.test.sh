@@ -195,48 +195,48 @@ rows_are() { # <desc> <expected rows, joined by newlines>
   local out; out="$(render)"
   if [ "$out" = "$2" ]; then ok "$1"; else no "$1"; printf '       wanted <<%s>>\n       got    <<%s>>\n' "$2" "$out"; fi
 }
-rows_are "from the primary checkout each worktree the session opened is a row, its repo in the location column and its folder in the worktree column" "┌─ location ─┬─ worktree ─────────────┬─ model ─┐
-│ mainrepo   │ trunk                  │ M       │
-│            │                        │         │
-│ + mainrepo │ feature ▸ feature idle │         │
-│ + mainrepo │ second ▸ second idle   │         │
-└────────────┴────────────────────────┴─────────┘"
+rows_are "from the primary checkout each worktree the session opened is a row, its repo in the location column and its folder in the worktree column" "┌─ location ─┬─ worktree ────────┬─ model ─┐
+│ mainrepo   │ trunk             │ M       │
+│            │                   │         │
+│ + mainrepo │ feature ▸ feature │         │
+│ + mainrepo │ second ▸ second   │         │
+└────────────┴───────────────────┴─────────┘"
 PAYLOAD="{\"session_id\":\"s2\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"}}"
-missing "another session's worktrees stay off the line" "idle"
+missing "another session's worktrees stay off the line" "+ mainrepo"
 printf '482\n' > "$FIX/sl/pr-mainrepo__second"
 PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"}}"
-says "a worktree the session opened carries its own branch's PR" "│ + mainrepo │ second ▸ second #482 idle │"
+says "a worktree the session opened carries its own branch's PR" "│ + mainrepo │ second ▸ second #482 │"
 
 # A session marks worktrees of any repo; one of another repo is named by its repo.
 git -C "$FIX/other" worktree add -q "$FIX/other/.claude/worktrees/ext" -b ext 2>/dev/null
 git -C "$FIX/other" worktree add -q "$FIX/other/.claude/worktrees/ext2" -b ext2 2>/dev/null
 printf '%s\n' "$FIX/other/.claude/worktrees/ext" "$FIX/other/.claude/worktrees/ext2" >> "$FIX/sl/worktrees-s1"
 printf '77\n' > "$FIX/sl/pr-other__ext"
-rows_are "three other worktrees show two lines and a count" "┌─ location ─┬─ worktree ────────────────┬─ model ─┐
-│ mainrepo   │ trunk                     │ M       │
-│            │                           │         │
-│ + mainrepo │ feature ▸ feature idle    │         │
-│ + mainrepo │ second ▸ second #482 idle │         │
-│            │ +2 more                   │         │
-└────────────┴───────────────────────────┴─────────┘"
+rows_are "three other worktrees show two lines and a count" "┌─ location ─┬─ worktree ───────────┬─ model ─┐
+│ mainrepo   │ trunk                │ M       │
+│            │                      │         │
+│ + mainrepo │ feature ▸ feature    │         │
+│ + mainrepo │ second ▸ second #482 │         │
+│            │ +2 more              │         │
+└────────────┴──────────────────────┴─────────┘"
 
 printf '12\n' > "$FIX/sl/pr-mainrepo__feature"
 PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/feature\"},\"model\":{\"display_name\":\"M\"}}"
-rows_are "inside a worktree it leads and is not repeated below; a worktree of another repo is named by its repo, with its own PR" "┌─ location ─┬─ worktree ────────────────┬─ model ─┐
-│ mainrepo   │ feature ▸ feature #12     │ M       │
-│            │                           │         │
-│ + mainrepo │ second ▸ second #482 idle │         │
-│ + other    │ ext ▸ ext #77 idle        │         │
-│            │ +1 more                   │         │
-└────────────┴───────────────────────────┴─────────┘"
+rows_are "inside a worktree it leads and is not repeated below; a worktree of another repo is named by its repo, with its own PR" "┌─ location ─┬─ worktree ────────────┬─ model ─┐
+│ mainrepo   │ feature ▸ feature #12 │ M       │
+│            │                       │         │
+│ + mainrepo │ second ▸ second #482  │         │
+│ + other    │ ext ▸ ext #77         │         │
+│            │ +1 more               │         │
+└────────────┴───────────────────────┴─────────┘"
 PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX/other/.claude/worktrees/ext2\"},\"model\":{\"display_name\":\"M\"}}"
-rows_are "inside another repo's worktree that repo leads and this one's are named" "┌─ location ─┬─ worktree ─────────────────┬─ model ─┐
-│ other      │ ext2 ▸ ext2                │ M       │
-│            │                            │         │
-│ + mainrepo │ feature ▸ feature #12 idle │         │
-│ + mainrepo │ second ▸ second #482 idle  │         │
-│            │ +1 more                    │         │
-└────────────┴────────────────────────────┴─────────┘"
+rows_are "inside another repo's worktree that repo leads and this one's are named" "┌─ location ─┬─ worktree ────────────┬─ model ─┐
+│ other      │ ext2 ▸ ext2           │ M       │
+│            │                       │         │
+│ + mainrepo │ feature ▸ feature #12 │         │
+│ + mainrepo │ second ▸ second #482  │         │
+│            │ +1 more               │         │
+└────────────┴───────────────────────┴─────────┘"
 
 PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX\"},\"model\":{\"display_name\":\"M\"},\"context_window\":{\"used_percentage\":\"x\"}}"
 render > /dev/null
@@ -244,42 +244,25 @@ if [ ! -s "$FIX/stderr" ]; then ok "a non-numeric context is silent on stderr"; 
 
 mkdir -p "$FIX/parent/dir"
 PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX/parent/dir\"},\"model\":{\"display_name\":\"M\"}}"
-says "outside any repo the path leads the location column" "│ parent/dir │                            │ M "
-says "outside any repo the session's worktrees still follow" "│ + mainrepo │ feature ▸ feature #12 idle │"
+says "outside any repo the path leads the location column" "│ parent/dir │                       │ M "
+says "outside any repo the session's worktrees still follow" "│ + mainrepo │ feature ▸ feature #12 │"
 
 # The branch is the worktree's own, not its folder's name; a detached HEAD has none to name.
 git -C "$FIX/mainrepo" worktree add -q "$FIX/mainrepo/.claude/worktrees/fix-482" -b restore/endorsed-copy-edits 2>/dev/null
 git -C "$FIX/mainrepo" worktree add -q --detach "$FIX/mainrepo/.claude/worktrees/pinned" 2>/dev/null
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/fix-482" "$FIX/mainrepo/.claude/worktrees/pinned" > "$FIX/sl/worktrees-s3"
 PAYLOAD="{\"session_id\":\"s3\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"}}"
-rows_are "a worktree line names the branch it is on, not its folder; a detached one ends at the tree" "┌─ location ─┬─ worktree ───────────────────────────────┬─ model ─┐
-│ mainrepo   │ trunk                                    │ M       │
-│            │                                          │         │
-│ + mainrepo │ fix-482 ▸ restore/endorsed-copy-ed… idle │         │
-│ + mainrepo │ pinned idle                              │         │
-└────────────┴──────────────────────────────────────────┴─────────┘"
+rows_are "a worktree line names the branch it is on, not its folder; a detached one ends at the tree" "┌─ location ─┬─ worktree ────────────────────────────┬─ model ─┐
+│ mainrepo   │ trunk                                 │ M       │
+│            │                                       │         │
+│ + mainrepo │ fix-482 ▸ restore/endorsed-copy-edits │         │
+│ + mainrepo │ pinned                                │         │
+└────────────┴───────────────────────────────────────┴─────────┘"
 PAYLOAD="{\"session_id\":\"s3\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/fix-482\"},\"model\":{\"display_name\":\"M\"}}"
 says "inside a worktree the worktree column names the branch it is on, not only its folder" "│ mainrepo   │ fix-482 ▸ restore/endorsed-copy-edits │"
 PAYLOAD="{\"session_id\":\"s3\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/pinned\"},\"model\":{\"display_name\":\"M\"}}"
 says "inside a detached worktree the worktree column ends at the folder" "│ mainrepo   │ pinned "
 
-echo "== the agents working in each checkout, as subagent-statusline.sh wrote them =="
-mkdir -p "$FIX/mainrepo/.claude/worktrees/second/sub"
-printf '%s\t36\treviewer\tclaude-opus-5-5\tworking\n%s\t35\tscout\tclaude-haiku-5-5\tstalled\n%s\t34\tfixer\tclaude-sonnet-5-5\tworking\n' \
-  "$FIX/mainrepo/.claude/worktrees/second" "$FIX/mainrepo/.claude/worktrees/second/sub" "$FIX/mainrepo" > "$FIX/sl/agents-s1"
-PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"}}"
-says "a worktree's row names the agents working in it" "│ + mainrepo │ second #482 reviewer working, scout sta… │"
-rows_are "an agent in the checkout you stand in stays off the worktree rows" "┌─ location ─┬─ worktree ───────────────────────────────┬─ model ─┐
-│ mainrepo   │ trunk                                    │ M       │
-│            │                                          │         │
-│ + mainrepo │ feature ▸ feature #12 idle               │         │
-│ + mainrepo │ second #482 reviewer working, scout sta… │         │
-│            │ +2 more                                  │         │
-└────────────┴──────────────────────────────────────────┴─────────┘"
-says "a worktree no agent works in is marked idle" "│ + mainrepo │ feature ▸ feature #12 idle "
-touch -t 200001010000 "$FIX/sl/agents-s1"
-says "an agents file the panel stopped writing is read as none" "│ + mainrepo │ second ▸ second #482 idle "
-rm -f "$FIX/sl/agents-s1"
 render >/dev/null
 if [ -s "$FIX/stderr" ]; then no "the session's worktrees render silent on stderr ($(head -1 "$FIX/stderr"))"
 else ok "the session's worktrees render silent on stderr"; fi
@@ -468,13 +451,6 @@ S="{\"id\":\"b\",\"agentType\":\"Explore\",\"status\":\"running\",\"label\":\"fi
 only "an agent with no name goes by its type, and six still readings make it stalled" "$S" "Explore  stalled  find it"
 D="{\"id\":\"c\",\"name\":\"code-review\",\"status\":\"completed\",\"label\":\"no findings\",\"cwd\":\"/w\"}"
 only "a finished agent says done" "$D" "code-review  done  no findings"
-agents "{\"session_id\":\"p1\",\"cwd\":\"/w\",\"columns\":100,\"tasks\":[$T,$S,$D]}" >/dev/null
-hue() { jq -rn --arg n "$1" '["36","35","34","32","96","95","94","92"][($n | explode | add) % 8]'; }
-if [ "$(cat "$FIX/sl/agents-p1")" = "$(printf '%s\t%s\treviewer\tclaude-sonnet-5-5\tworking\n%s\t%s\tExplore\t-\tstalled' /w/.claude/worktrees/band "$(hue reviewer)" /w "$(hue Explore)")" ]; then
-  ok "each running agent's folder, colour, name, model id and state are written for the status line; a finished one is not"
-else no "each running agent's folder, colour, name, model id and state are written for the status line ($(cat -t "$FIX/sl/agents-p1"))"; fi
-agents "{\"session_id\":\"p1\",\"cwd\":\"/w\",\"tasks\":[$D]}" >/dev/null
-if [ ! -s "$FIX/sl/agents-p1" ]; then ok "with no agent running the file empties"; else no "with no agent running the file empties"; fi
 if agents "{\"cwd\":\"/w\",\"columns\":100,\"tasks\":[$T,$D]}" | jq -e -s 'map(.id) == ["a","c"]' >/dev/null; then ok "each row answers its own task id"
 else no "each row answers its own task id"; fi
 PLAIN=""
@@ -593,42 +569,30 @@ rows_are "a named session's name sits under the repo as bot: <name>" "┌─ loc
 └────────────┴────────────┴─────────┘"
 PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-lay"
-rows_are "one other worktree is one row under a blank one, + repo beside its folder and state" "┌─ location ─┬─ worktree ─────────────┬─ model ─┐
-│ mainrepo   │ same                   │ M       │
-│            │                        │         │
-│ + mainrepo │ feature ▸ feature idle │         │
-└────────────┴────────────────────────┴─────────┘"
+rows_are "one other worktree is one row under a blank one, + repo beside its folder and state" "┌─ location ─┬─ worktree ────────┬─ model ─┐
+│ mainrepo   │ same              │ M       │
+│            │                   │         │
+│ + mainrepo │ feature ▸ feature │         │
+└────────────┴───────────────────┴─────────┘"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" "$FIX/mainrepo/.claude/worktrees/feature" "$FIX/other/.claude/worktrees/ext" "$FIX/other/.claude/worktrees/ext2" "$FIX/mainrepo/.claude/worktrees/second" > "$FIX/sl/worktrees-lay"
-rows_are "three other worktrees are two rows and the count of the rest" "┌─ location ─┬─ worktree ─────────────┬─ model ─┐
-│ mainrepo   │ same                   │ M       │
-│            │                        │         │
-│ + mainrepo │ feature ▸ feature idle │         │
-│ + other    │ ext ▸ ext idle         │         │
-│            │ +2 more                │         │
-└────────────┴────────────────────────┴─────────┘"
+rows_are "three other worktrees are two rows and the count of the rest" "┌─ location ─┬─ worktree ────────┬─ model ─┐
+│ mainrepo   │ same              │ M       │
+│            │                   │         │
+│ + mainrepo │ feature ▸ feature │         │
+│ + other    │ ext ▸ ext         │         │
+│            │ +2 more           │         │
+└────────────┴───────────────────┴─────────┘"
 [ "$(widths | wc -w | tr -d ' ')" = 1 ] && ok "every box line is as wide as the top edge" || no "every box line is as wide as the top edge ($(widths))"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" "$FIX/mainrepo/.claude/worktrees/feature" "$FIX/other/.claude/worktrees/ext" > "$FIX/sl/worktrees-lay"
 
 printf '%s\t36\tzz\tclaude-opus-5-5\tworking\n' "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/agents-lay"
-rows_are "an agent in another worktree is named on that worktree's row" "┌─ location ─┬─ worktree ───────────────────┬─ model ─┐
-│ mainrepo   │ same                         │ M       │
-│            │                              │         │
-│ + mainrepo │ feature ▸ feature zz working │         │
-│ + other    │ ext ▸ ext idle               │         │
-└────────────┴──────────────────────────────┴─────────┘"
-[ "$(widths | wc -w | tr -d ' ')" = 1 ] && ok "with agents every box line is as wide as the top edge" || no "with agents every box line is as wide as the top edge ($(widths))"
-
-printf '%s\t36\treviewer-of-a-long-name\tclaude-opus-5-5\tworking\n' "$FIX/mainrepo" > "$FIX/sl/agents-lay"
-printf '' > "$FIX/sl/worktrees-lay"
-rows_are "an agents row wider than the panels widens the box, the usage panel taking the room" "┌─ location ─┬─ worktree ─┬─ model ─┐
-│ mainrepo   │ same       │ M       │
-└────────────┴────────────┴─────────┘"
+missing "a sub-agent stays off the box, which draws the main session only" "zz"
 rm -f "$FIX/sl/agents-lay" "$FIX/sl/worktrees-lay"
 
 echo "== the box: long names, usage windows and plain mode =="
 PLAIN=1
 mkrepo averyveryverylongrepositoryname-with-a-tail trunk
-rm -f "$FIX/sl/agents-lay" "$FIX/sl/worktrees-lay"
+rm -f "$FIX/sl/worktrees-lay"
 PAYLOAD="{\"workspace\":{\"current_dir\":\"$FIX/averyveryverylongrepositoryname-with-a-tail\",\"repo\":{\"name\":\"averyveryverylongrepositoryname-with-a-tail\"}},\"model\":{\"display_name\":\"A model with a name far longer than the panel\"},\"effort\":{\"level\":\"medium\"}}"
 says "a long repo name ends in … within the location panel" "│ averyveryverylongreposi… │"
 says "a long model name ends in … within the model panel" "│ A model with a name… │"
@@ -654,24 +618,22 @@ vis_widths=$(printf '%s\n' "$out" | cols)
 unset PLAIN
 case "$out" in *"${E}[2m│${E}[0m"*) ok "the border is dim" ;; *) no "the border is dim" ;; esac
 case "$out" in *"${E}[2m└"*) ok "the bottom edge is dim" ;; *) no "the bottom edge is dim" ;; esac
-git -C "$FIX/mainrepo" worktree add -q "$FIX/mainrepo/.claude/worktrees/a-tree-named-far-too-long-for-the-panel" -b worktree-a-tree-named-far-too-long-for-the-panel 2>/dev/null
-printf '%s\n' "$FIX/mainrepo/.claude/worktrees/a-tree-named-far-too-long-for-the-panel" "$FIX/mainrepo/.claude/worktrees/second" > "$FIX/sl/worktrees-lay"
-printf '%s\t36\tzz\tclaude-opus-5-5\tworking\n' "$FIX/mainrepo/.claude/worktrees/a-tree-named-far-too-long-for-the-panel" > "$FIX/sl/agents-lay"
+git -C "$FIX/mainrepo" worktree add -q "$FIX/mainrepo/.claude/worktrees/a-tree-named-far-far-too-long-for-the-panel-to-hold" -b worktree-a-tree-named-far-far-too-long-for-the-panel-to-hold 2>/dev/null
+printf '%s\n' "$FIX/mainrepo/.claude/worktrees/a-tree-named-far-far-too-long-for-the-panel-to-hold" "$FIX/mainrepo/.claude/worktrees/second" > "$FIX/sl/worktrees-lay"
 PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"}}"
 PLAIN=""
 out=$(render)
 unset PLAIN
-[ "$(printf '%s\n' "$out" | cols | wc -w | tr -d ' ')" = 1 ] && ok "a shortened link and its colour still make every line as wide, with agents" || no "a shortened link and its colour still make every line as wide, with agents ($(printf '%s\n' "$out" | cols))"
+[ "$(printf '%s\n' "$out" | cols | wc -w | tr -d ' ')" = 1 ] && ok "a shortened link and its colour still make every line as wide" || no "a shortened link and its colour still make every line as wide ($(printf '%s\n' "$out" | cols))"
 case "$out" in *"…${E}[0m${E}]8;;${E}\\"*) ok "a link cut short is closed" ;; *) no "a link cut short is closed" ;; esac
-rm -f "$FIX/sl/agents-lay" "$FIX/sl/worktrees-lay"
+rm -f "$FIX/sl/worktrees-lay"
 
 echo "== the box: four panels, the fallback to three, the joints and long names =="
-rm -f "$FIX/sl/agents-lay" "$FIX/sl/worktrees-lay"
+rm -f "$FIX/sl/worktrees-lay"
 printf -- '-\n' > "$FIX/sl/pr-mainrepo__trunk"; printf '482\n' > "$FIX/sl/pr-mainrepo__second"; printf '12\n' > "$FIX/sl/pr-mainrepo__feature"
 LONGWT="$FIX/mainrepo/.claude/worktrees/a-worktree-folder-named-much-too-long-to-show-in-its-panel"
 git -C "$FIX/mainrepo" worktree add -q "$LONGWT" -b a-branch-that-is-not-the-folder-name-at-all 2>/dev/null
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-fp"
-printf '%s\t36\treviewer\tclaude-opus-5-5\tworking\n' "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/agents-fp"
 LIM=',"rate_limits":{"five_hour":{"used_percentage":70},"seven_day":{"used_percentage":85}}'
 LIM_CLOCKS=",\"rate_limits\":{\"five_hour\":{\"used_percentage\":70,\"resets_at\":$(epoch_in 7200)},\"seven_day\":{\"used_percentage\":85,\"resets_at\":$(epoch_in 190000)}}"
 fp() { # <dir> [no-model] — a session "fp" in <dir>, with the effort and ctx, and a model name unless told not
@@ -681,33 +643,24 @@ fp() { # <dir> [no-model] — a session "fp" in <dir>, with the effort and ctx, 
   PAYLOAD="{\"session_id\":\"fp\",\"workspace\":{\"current_dir\":\"$1\"}$m,\"effort\":{\"level\":\"medium\"},\"context_window\":{\"used_percentage\":45}$LIM}"
 }
 fp "$FIX/mainrepo/.claude/worktrees/second"
-rows_are "a worktree session with an agent working in the other worktree: the repo in location, the folder in worktree, a blank row, the other worktree beside its repo, then model and usage" "┌─ location ─┬─ worktree ─────────────────────────────┬─ model ───────┐
-│ mainrepo   │ second ▸ second #482                   │ Sonnet 5.5    │
-│            │                                        │ medium effort │
-│ + mainrepo │ feature ▸ feature #12 reviewer working │               │
-├─ usage ────┴────────────────────────────────────────┴───────────────┤
-│ ctx 45%  ·  session 30% left  ·  week 15% left                      │
-└─────────────────────────────────────────────────────────────────────┘"
-rm -f "$FIX/sl/agents-fp"
-rows_are "a worktree session: the repo in location, the folder in worktree, a blank row, the other worktree beside its repo, then model and usage in full words" "┌─ location ─┬─ worktree ─────────────────┬─ model ───────┐
-│ mainrepo   │ second ▸ second #482       │ Sonnet 5.5    │
-│            │                            │ medium effort │
-│ + mainrepo │ feature ▸ feature #12 idle │               │
-├─ usage ────┴────────────────────────────┴───────────────┤
-│ ctx 45%  ·  session 30% left  ·  week 15% left          │
-└─────────────────────────────────────────────────────────┘"
-printf '%s\t36\treviewer\tclaude-opus-5-5\tworking\n' "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/agents-fp"
+rows_are "a worktree session: the repo in location, the folder in worktree, a blank row, the other worktree beside its repo, then model and usage in full words" "┌─ location ─┬─ worktree ────────────┬─ model ───────┐
+│ mainrepo   │ second ▸ second #482  │ Sonnet 5.5    │
+│            │                       │ medium effort │
+│ + mainrepo │ feature ▸ feature #12 │               │
+├─ usage ────┴───────────────────────┴───────────────┤
+│ ctx 45%  ·  session 30% left  ·  week 15% left     │
+└────────────────────────────────────────────────────┘"
 fp "$FIX/mainrepo"
 says "the main checkout's worktree column is the branch" "│ mainrepo   │ trunk"
 says "another worktree is one row across the location and worktree columns" "│ + mainrepo │ feature ▸ feature "
 fp "$FIX/mainrepo" none
-rows_are "with no model name the model panel is not drawn and the box has three panels" "┌─ location ─┬─ worktree ─────────────────────────────┐
-│ mainrepo   │ trunk                                  │
-│            │                                        │
-│ + mainrepo │ feature ▸ feature #12 reviewer working │
-├─ usage ────┴────────────────────────────────────────┤
-│ ctx 45%  ·  session 30% left  ·  week 15% left      │
-└─────────────────────────────────────────────────────┘"
+rows_are "with no model name the model panel is not drawn and the box has three panels" "┌─ location ─┬─ worktree ────────────────────────┐
+│ mainrepo   │ trunk                             │
+│            │                                   │
+│ + mainrepo │ feature ▸ feature #12             │
+├─ usage ────┴───────────────────────────────────┤
+│ ctx 45%  ·  session 30% left  ·  week 15% left │
+└────────────────────────────────────────────────┘"
 fp "$FIX/mainrepo/.claude/worktrees/second"
 joints() { # <row> <character> — the columns holding it
   printf '%s\n' "$1" | LC_ALL=en_US.UTF-8 bash -c 'read -r l; for ((i = 0; i < ${#l}; i++)); do [ "${l:i:1}" = "$1" ] && printf "%s " "$i"; done' _ "$2"
@@ -726,11 +679,10 @@ _out=$(render)
 [ "$(printf '%s\n' "$_out" | cols)" = "$(printf '%s\n' "$_out" | awk 'NR==1' | cols)" ] && [ "$(printf '%s\n' "$_out" | cols | tr -d ' ')" -le 100 ] && ok "long names keep every line of the box as wide as its top edge, at most 100 columns" || no "long names keep every line of the box as wide as its top edge, at most 100 columns ($(printf '%s\n' "$_out" | cols))"
 grep -q 'a-worktree-folder-named-much-too-long-t…' <<< "$_out" && ok "a long worktree folder ends in … within the worktree panel" || no "a long worktree folder ends in … within the worktree panel ($_out)"
 grep -qF 'ctx 45%  ·  session 30% left (' <<< "$_out" && ok "usage keeps the long labels on one row when it fits in 100 columns" || no "usage keeps the long labels on one row when it fits in 100 columns"
-rm -f "$FIX/sl/agents-fp" "$FIX/sl/worktrees-fp"
+rm -f "$FIX/sl/worktrees-fp"
 
 echo "== without a UTF-8 locale the box is ASCII and as wide =="
 PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"},\"effort\":{\"level\":\"low\"},\"context_window\":{\"used_percentage\":5},\"rate_limits\":{\"five_hour\":{\"used_percentage\":10},\"seven_day\":{\"used_percentage\":20}}}"
-printf '%s\t36\tzz\tclaude-opus-5-5\tworking\n' "$FIX/mainrepo" > "$FIX/sl/agents-lay"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-lay"
 ascii=$(printf '%s' "$PAYLOAD" | LC_ALL=C STATUSLINE_LOCALES=none NO_COLOR=1 STATUSLINE_STATE="${STATUSLINE_STATE-$FIX/sl}" bash "$SL" 2>/dev/null)
 LC_ALL=C grep -q '[^ -~]' <<< "$ascii" && no "no UTF-8 locale gives plain ASCII ($ascii)" || ok "no UTF-8 locale gives plain ASCII"
@@ -741,7 +693,7 @@ STATUSLINE_STATE="$FIX/sl" fixture focus-file lay
 ascii=$(printf '%s' "$PAYLOAD" | STATUSLINE_STATE="$FIX/sl" LC_ALL=C STATUSLINE_LOCALES=none NO_COLOR=1 bash "$SL" 2>/dev/null)
 grep -qF 'HP ##########---------- 5 ! - REGROUP' <<< "$ascii" && ok "with no UTF-8 locale the focus row draws each part's ASCII text" || no "with no UTF-8 locale the focus row draws each part's ASCII text ($ascii)"
 LC_ALL=C grep -q '[^ -~]' <<< "$ascii" && no "the focus row keeps the output plain ASCII ($ascii)" || ok "the focus row keeps the output plain ASCII"
-rm -f "$FIX/sl/agents-lay" "$FIX/sl/worktrees-lay" "$FIX/sl/focus-lay.json"
+rm -f "$FIX/sl/worktrees-lay" "$FIX/sl/focus-lay.json"
 
 echo "== the palette is the theme's =="
 if command grep -q '38;5;\|38;2;\|48;5;' "$(dirname "$SL")/statusline.sh" "$(dirname "$SL")/subagent-statusline.sh"; then no "no fixed 256-colour or RGB code remains in either script"

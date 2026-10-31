@@ -7,18 +7,8 @@
 # tokens for six readings), done, failed or stopped, and a finished row is dim. Columns line up
 # across rows; on a narrow panel the time, model, effort and place go first, then the task
 # text shortens.
-#
-# Each running agent's folder, colour, name, model id and state go to agents-<session_id> in the status
-# line's state folder, one tab-separated line each, so statusline.sh can put the agent on the
-# line of the worktree it works in.
 
 input=$(cat)
-# The state folder, for the focus file, the PR cache, the agents and the session's worktrees: STATUSLINE_STATE, else
-# CLAUDE_CONFIG_DIR/state, else ~/.claude/state, an empty variable counting as unset. With none of them there is no
-# folder, and nothing is read or written.
-_state="${STATUSLINE_STATE:-${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/state}}"
-_state="${_state:-${HOME:+$HOME/.claude/state}}"
-
 out=$(printf '%s' "$input" | jq -r --argjson clock "${STATUSLINE_NOW:-null}" --argjson nc "$([ -n "${NO_COLOR:-}" ] && echo true || echo false)" '
   def paint($c): if $nc or $c == "" then . else "\u001b[\($c)m\(.)\u001b[0m" end;
   def pad($n): if $n > length then . + ([range($n - length)] | map(" ") | join("")) else . end;
@@ -44,13 +34,11 @@ out=$(printf '%s' "$input" | jq -r --argjson clock "${STATUSLINE_NOW:-null}" --a
           live: $live,
           stalled: $stalled,
           hue: $hue,
-          folder: ($t.cwd // ""),
           state: (if $stalled then ["stalled", "33"] elif $live then ["working", ""]
                   elif $t.status == "completed" then ["done", ""]
                   elif $t.status == "failed" then ["failed", "31"]
                   else ["stopped", ""] end),
           name: $name,
-          modelid: (($t.model // "") | tostring | gsub("\\s+"; "") | if . == "" then "-" else . end),
           model: (($t.model // "") | ascii_downcase
                   | if test("opus") then "Opus" elif test("sonnet") then "Sonnet"
                     elif test("haiku") then "Haiku" elif test("fable") then "Fable" else "" end),
@@ -85,13 +73,8 @@ out=$(printf '%s' "$input" | jq -r --argjson clock "${STATUSLINE_NOW:-null}" --a
         (if ($fit.keep | index("time")) and $wt > 0 then ($r.time | hue("")) else empty end)
       ]
       | {id: $r.id, content: join("  ")}
-      | tojson),
-    ($rows[] | select(.live and .folder != "") | "\t\(.folder)\t\(.hue)\t\(.name)\t\(.modelid)\t\(.state[0])")
+      | tojson)
 ')
 
-[ -n "$out" ] && printf '%s\n' "$out" | grep -v $'^\t'
-sid=$(printf '%s' "$input" | jq -r '.session_id // empty')
-if [ -n "$sid" ] && [ -n "$_state" ] && mkdir -p "$_state" 2>/dev/null; then
-  printf '%s\n' "$out" | grep $'^\t' | cut -c2- > "$_state/agents-$sid.tmp" && mv "$_state/agents-$sid.tmp" "$_state/agents-$sid"
-fi
+[ -n "$out" ] && printf '%s\n' "$out"
 exit 0

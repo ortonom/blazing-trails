@@ -39,7 +39,7 @@ test('at session start, state files untouched for 14 days are deleted from the s
   await clock.settle()
 
   expect(prunes(runs)).toEqual([
-    ['find', '/home/w/.claude/state', '-maxdepth', '1', '-type', 'f', '(', '-name', 'focus-*.json', '-o', '-name', 'agents-*', '-o', '-name', 'pr-*', '-o', '-name', 'worktrees-*', ')', '-mmin', '+20160', '-delete'],
+    ['find', '/home/w/.claude/state', '-maxdepth', '1', '-type', 'f', '(', '-name', 'focus-*.json', '-o', '-name', 'pr-*', '-o', '-name', 'worktrees-*', ')', '-mmin', '+20160', '-delete'],
   ])
 })
 
