@@ -586,6 +586,12 @@ printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" > "$FIX/sl/worktrees-lay"
 rows_are "with no other worktree and no agent the box has its three panels" "┌─ location ─┬─ worktree ─┬─ model ─┐
 │ mainrepo   │ same       │ M       │
 └────────────┴────────────┴─────────┘"
+PAYLOAD="{\"session_id\":\"lay\",\"session_name\":\"fixer\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
+rows_are "a named session's name sits under the repo as bot: <name>" "┌─ location ─┬─ worktree ─┬─ model ─┐
+│ mainrepo   │ same       │ M       │
+│ bot: fixer │            │         │
+└────────────┴────────────┴─────────┘"
+PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-lay"
 rows_are "one other worktree is one row under a blank one, + repo beside its folder and state" "┌─ location ─┬─ worktree ─────────────┬─ model ─┐
 │ mainrepo   │ same                   │ M       │

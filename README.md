@@ -74,13 +74,13 @@ HP ■■■■■■■■■■■■■■□□□□□□ 7 · ⬆ CLEAR G
 ☰ plan 2   ✓ one place
 ┌─ location ─────┬─ worktree ─┬─ model ─────┐
 │ my-app         │ main       │ Opus 5.5    │
-│                │            │ high effort │
+│ bot: fixer     │            │ high effort │
 ├─ usage ────────┴────────────┴─────────────┤
 │ ctx 48%  ·  session 99% left (4h48m)  ·  week 24% left (1d10h) │
 └───────────────────────────────────────────┘
 ```
 
-The HP row, the plan files this session touched, then the repo, worktrees and their PRs, the model and effort, and
+The HP row, the plan files this session touched, then the repo, the session's `/rename` name as `bot:`, worktrees and their PRs, the model and effort, and
 context and plan usage. The agent panel shows each running agent's folder, model and state.
 
 - Turn it on: `/ortonom:statusline`, once per machine. It points your `statusLine` setting at the copy the plugin

@@ -7,12 +7,12 @@
 #   then a box of three panels over a usage row:
 #   ┌─ location ──────┬─ worktree ───────────────┬─ model ────────────────────┐
 #   │ my-app          │ fix-login                │ Sonnet 5.5                 │
-#   │                 │                          │ medium effort              │
+#   │ bot: login-fix  │                          │ medium effort              │
 #   │ + my-api        │ add-tests idle           │                            │
 #   ├─ usage ─────────┴──────────────────────────┴────────────────────────────┤
 #   │ ctx 45%  ·  session 93% left (3h48m)  ·  week 13% left (1d15h)          │
 #   └─────────────────────────────────────────────────────────────────────────┘
-#   location: the repo, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
+#   location: the repo, then "bot: <session name>" when the session has one, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
 #   worktree: the session's worktree folder, or the branch in the main checkout, with ▸ branch when it is not worktree-<tree>,
 #   its PR and checks; then each other worktree's folder, with its PR and the agents working in it or idle, two at most and
 #   then "+N more".
@@ -31,13 +31,14 @@ _mtime() { if [ -n "$_gnu" ]; then stat -c %Y "$1"; else stat -f %m "$1"; fi 2>/
 
 # Every payload field the line draws, read in one jq; an absent field, one of the wrong shape, or a payload that is not
 # JSON leaves its variable empty, and only its own. tostring keeps a non-scalar value on one line.
-cwd="" repo="" _sid="" model="" effort="" ctx=""
+cwd="" repo="" _sid="" bot="" model="" effort="" ctx=""
 _rl_five_hour_used="" _rl_five_hour_resets="" _rl_seven_day_used="" _rl_seven_day_resets=""
 eval "$(printf '%s' "$input" | jq -r '
   def field($name; v): (try (v // empty) catch empty) | tostring | $name + "=" + @sh;
   field("cwd"; .workspace.current_dir),
   field("repo"; .workspace.repo.name),
   field("_sid"; .session_id),
+  field("bot"; .session_name),
   field("model"; .model.display_name),
   field("effort"; .effort.level),
   field("ctx"; .context_window.used_percentage),
@@ -535,9 +536,10 @@ _rule() { _spaces "$1"; _RL=${_SP// /$_H}; }
 # The panel titles; a rename is an edit here.
 _TITLE_LOCATION=location; _TITLE_WORKTREE=worktree; _TITLE_MODEL=model; _TITLE_USAGE=usage
 
-# The location and worktree panels' rows: the session's place, a blank row, then the other worktrees, two at most.
+# The location and worktree panels' rows: the session's place, its name (absent until /rename names it), a blank row, then the other worktrees, two at most.
 _lc=(); _wh=(); _wx=(); _wt=()
 if [ -n "$place_head" ]; then _lc+=("$place_head"); _wh+=("$place_tree"); _wx+=("$place_extra"); _wt+=("$place_tail"); fi
+if [ -n "$bot" ]; then _lc+=("bot: $bot"); _wh+=(""); _wx+=(""); _wt+=(""); fi
 _shown=${#_th[@]}; [ "$_shown" -gt 2 ] && _shown=2
 if [ "$_shown" -gt 0 ] && [ "${#_lc[@]}" -gt 0 ]; then _lc+=(""); _wh+=(""); _wx+=(""); _wt+=(""); fi
 for ((_i = 0; _i < _shown; _i++)); do _lc+=("${_tr[$_i]}"); _wh+=("${_th[$_i]}"); _wx+=("${_tx_[$_i]}"); _wt+=("${_tt[$_i]}"); done
