@@ -8,20 +8,18 @@
 #   ┌─ location ──────┬─ worktree ───────────────┬─ model ────────────────────┐
 #   │ my-app          │ fix-login                │ Sonnet 5.5                 │
 #   │ bot: login-fix  │                          │ medium effort              │
-#   │ + my-api        │ add-tests idle           │                            │
+#   │ + my-api        │ add-tests                │                            │
 #   ├─ usage ─────────┴──────────────────────────┴────────────────────────────┤
 #   │ ctx 45%  ·  session 93% left (3h48m)  ·  week 13% left (1d15h)          │
 #   └─────────────────────────────────────────────────────────────────────────┘
 #   location: the repo, then "bot: <session name>" when the session has one, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
 #   worktree: the session's worktree folder, or the branch in the main checkout, with ▸ branch when it is not worktree-<tree>,
-#   its PR and checks; then each other worktree's folder, with its PR and the agents working in it or idle, two at most and
-#   then "+N more".
+#   its PR and checks; then each other worktree's folder with its PR, two at most and then "+N more". Sub-agents stay
+#   off the box; the agent panel draws them.
 #   model: the display name, then "<effort> effort"; the box has two panels when there is no model name.
 #   usage: one row of ctx used, then the 5-hour session and weekly windows with what is left, when each resets and when
 #   the session runs out; "sess" and "wk" stand in for "session" and "week" when the row would pass the box's width.
 #   A panel is as wide as its content, the box at most 100 columns; longer text ends in "…".
-# subagent-statusline.sh draws the agent panel and writes agents-<session id>, one tab-separated
-# line per running agent: folder, colour, name, model, state.
 
 input=$(cat)
 
@@ -72,7 +70,7 @@ if [ -n "$cwd" ]; then
   fi
 fi
 
-# The state folder, for the focus file, the PR cache, the agents and the session's worktrees: STATUSLINE_STATE, else
+# The state folder, for the focus file, the PR cache and the session's worktrees: STATUSLINE_STATE, else
 # CLAUDE_CONFIG_DIR/state, else ~/.claude/state, an empty variable counting as unset. With none of them there is no
 # folder, and nothing is read or written.
 _state="${STATUSLINE_STATE:-${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/state}}"
@@ -186,40 +184,10 @@ _pr_seg() { # <checkout>
 }
 
 
-# The running sub-agents, as subagent-statusline.sh last wrote them: folder, colour, name, model and
-# state, tab-separated. The panel stops calling it once no agent shows, so a file not rewritten in
-# the last 30 seconds is read as none.
-_agents=""
-if [ -n "$_sid" ] && [ -n "$_state" ]; then
-  _af="$_state/agents-$_sid"
-  if [ -r "$_af" ] && [ $(( $(date +%s) - $(_mtime "$_af" || echo 0) )) -le 30 ]; then
-    _agents=$(cat "$_af" 2>/dev/null)
-  fi
-fi
-
-# "reviewer working, scout stalled" for the agents working in a folder, each name in its own
-# colour; a worktree's agents are its own, not the folder that holds it.
-_agents_in() { # <folder>
-  local f hue name model state tone rest out=""
-  [ -n "$_agents" ] || return 0
-  while IFS=$'\t' read -r f hue name model state; do
-    case "$f" in
-      "$1") ;;
-      "$1"/*) rest=${f#"$1"/}; case "$rest" in *.claude/worktrees/*) continue ;; esac ;;
-      *) continue ;;
-    esac
-    tone=""; [ -n "$RST" ] && tone=$'\033['"${hue}m"
-    [ "$state" = stalled ] && state="${YEL}stalled${YEL:+$RST}"
-    out="${out:+$out, }${tone}${name}${tone:+$RST} ${state}"
-  done <<< "$_agents"
-  printf '%s' "$out"
-}
-
-
 # The session's worktrees are the paths in worktrees-<session_id>, one a line: the plugin's hook marks each worktree the
-# session enters (hooks/worktrees.ts), and any other tool may add a line. Each gets a row of the worktree panel with its own branch's PR and the agents
-# working in it, or idle when none is, its repo in the location column; the cwd's own worktree, one that is
-# gone, or one that is not a linked worktree is skipped.
+# session enters (hooks/worktrees.ts), and any other tool may add a line. Each gets a row of the worktree panel with its
+# own branch's PR, its repo in the location column; the cwd's own worktree, one that is gone, or one that is not a linked
+# worktree is skipped.
 _th=(); _tr=(); _tx_=(); _tt=()
 if [ -n "$_sid" ] && [ -n "$_state" ] && [ -r "$_state/worktrees-$_sid" ]; then
   while IFS= read -r _tree; do
@@ -232,11 +200,10 @@ if [ -n "$_sid" ] && [ -n "$_state" ] && [ -r "$_state/worktrees-$_sid" ]; then
     if [ "$_tgcd" != "$_gcd" ]; then _trepo=$(basename "${_tgcd%/.git}"); fi
     _tbr=$(git -C "$_tree" --no-optional-locks symbolic-ref --short HEAD 2>/dev/null)
     _pr_of "$_tree" "$_tbr" "$_trepo"
-    _who=$(_agents_in "$_tree")
     _tname=$(basename "$_tree")
     _thead=$(_link "file://$_tree" "$_tname")
     _tx=""; if [ -n "$_tbr" ] && [ "$_tbr" != "worktree-$_tname" ]; then _tx=" $_ARW $_tbr"; fi
-    _th+=("$_thead"); _tr+=("+${_trepo:+ $_trepo}"); _tx_+=("$_tx"); _tt+=("$(_pr_seg "$_tree") ${_who:-${DIM}idle${DIM:+$RST}}")
+    _th+=("$_thead"); _tr+=("+${_trepo:+ $_trepo}"); _tx_+=("$_tx"); _tt+=("$(_pr_seg "$_tree")")
   done < "$_state/worktrees-$_sid"
 fi
 

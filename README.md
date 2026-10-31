@@ -95,7 +95,7 @@ context and plan usage. The agent panel shows each running agent's folder, model
   `☰ worktree docs/plans/ 1   ✓ one place`.
 - On the HP row, `!` and `!!` after the number mark health at 4 to 6 and at 1 to 3, and a `?` after the level
   means the last turn could not be read.
-- It keeps its state, the focus file, the PR cache, the running agents and the session's worktrees, in
+- It keeps its state, the focus file, the PR cache and the session's worktrees, in
   `~/.claude/state`, the plugin's own folder; files there older than 14 days are deleted at session start.
 
 | variable | what it does |
@@ -170,7 +170,7 @@ stands in for `~/.claude`.
 - **Commands**: `git rev-parse` in the session's folder. The status line runs `git`, and `gh pr list` for the
   branch's PR in a background process whose answer it keeps for 5 minutes. Each session start copies the two
   status-line scripts into the plugin's data folder.
-- **Files**: `focus-<session>.json`, `worktrees-<session>`, `agents-<session>` and `pr-*` in `~/.claude/state`, or the
+- **Files**: `focus-<session>.json`, `worktrees-<session>` and `pr-*` in `~/.claude/state`, or the
   folder `STATUSLINE_STATE` names. Each session start deletes the ones older than 14 days.
 - **Network**: only the model calls above, through Claude Code, and `gh`, to GitHub. The plugin hooks no telemetry
   and sends no analytics.
