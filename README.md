@@ -74,14 +74,15 @@ HP ■■■■■■■■■■■■■■□□□□□□ 7 · ⬆ CLEAR G
 ☰ plan 2   ✓ one place
 ┌─ location ─────┬─ worktree ─┬─ model ─────┐
 │ my-app         │ main       │ Opus 5.5    │
-│ bot: fixer     │            │ high effort │
+│                │            │ high effort │
 ├─ usage ────────┴────────────┴─────────────┤
 │ ctx 48%  ·  session 99% left (4h48m)  ·  week 24% left (1d10h) │
 └───────────────────────────────────────────┘
+session Fix the login flow · 31f41d3e
 ```
 
-The HP row, the plan files this session touched, then the repo, the session's `/rename` name as `bot:`, worktrees and their PRs, the model and effort, and
-context and plan usage. The agent panel shows each running agent's folder, model and state.
+The HP row, the plan files this session touched, then the repo, worktrees and their PRs, the model and effort, and
+context and plan usage, then the session's name (its `/rename` name, else Claude Code's automatic title) and the start of its id. The agent panel shows each running agent's folder, model and state.
 
 - Turn it on: `/ortonom:statusline`, once per machine. It points your `statusLine` setting at the copy the plugin
   keeps current in its data folder, so each update reaches it at the next session start. Nothing else touches the

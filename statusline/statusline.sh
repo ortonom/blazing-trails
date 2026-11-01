@@ -7,12 +7,13 @@
 #   then a box of three panels over a usage row:
 #   ┌─ location ──────┬─ worktree ───────────────┬─ model ────────────────────┐
 #   │ my-app          │ fix-login                │ Sonnet 5.5                 │
-#   │ bot: login-fix  │                          │ medium effort              │
+#   │                 │                          │ medium effort              │
 #   │ + my-api        │ add-tests                │                            │
 #   ├─ usage ─────────┴──────────────────────────┴────────────────────────────┤
 #   │ ctx 45%  ·  session 93% left (3h48m)  ·  week 13% left (1d15h)          │
 #   └─────────────────────────────────────────────────────────────────────────┘
-#   location: the repo, then "bot: <session name>" when the session has one, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
+#   session Naturalslim dotfile upgrade · 31f41d3e   the session's name and the start of its id; absent with no session id
+#   location: the repo, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
 #   worktree: the session's worktree folder, or the branch in the main checkout, with ▸ branch when it is not worktree-<tree>,
 #   its PR and checks; then each other worktree's folder with its PR, two at most and then "+N more". Sub-agents stay
 #   off the box; the agent panel draws them.
@@ -29,14 +30,15 @@ _mtime() { if [ -n "$_gnu" ]; then stat -c %Y "$1"; else stat -f %m "$1"; fi 2>/
 
 # Every payload field the line draws, read in one jq; an absent field, one of the wrong shape, or a payload that is not
 # JSON leaves its variable empty, and only its own. tostring keeps a non-scalar value on one line.
-cwd="" repo="" _sid="" bot="" model="" effort="" ctx=""
+cwd="" repo="" _sid="" _name="" _transcript="" model="" effort="" ctx=""
 _rl_five_hour_used="" _rl_five_hour_resets="" _rl_seven_day_used="" _rl_seven_day_resets=""
 eval "$(printf '%s' "$input" | jq -r '
   def field($name; v): (try (v // empty) catch empty) | tostring | $name + "=" + @sh;
   field("cwd"; .workspace.current_dir),
   field("repo"; .workspace.repo.name),
   field("_sid"; .session_id),
-  field("bot"; .session_name),
+  field("_name"; .session_name),
+  field("_transcript"; .transcript_path),
   field("model"; .model.display_name),
   field("effort"; .effort.level),
   field("ctx"; .context_window.used_percentage),
@@ -503,10 +505,9 @@ _rule() { _spaces "$1"; _RL=${_SP// /$_H}; }
 # The panel titles; a rename is an edit here.
 _TITLE_LOCATION=location; _TITLE_WORKTREE=worktree; _TITLE_MODEL=model; _TITLE_USAGE=usage
 
-# The location and worktree panels' rows: the session's place, its name (absent until /rename names it), a blank row, then the other worktrees, two at most.
+# The location and worktree panels' rows: the session's place, a blank row, then the other worktrees, two at most.
 _lc=(); _wh=(); _wx=(); _wt=()
 if [ -n "$place_head" ]; then _lc+=("$place_head"); _wh+=("$place_tree"); _wx+=("$place_extra"); _wt+=("$place_tail"); fi
-if [ -n "$bot" ]; then _lc+=("bot: $bot"); _wh+=(""); _wx+=(""); _wt+=(""); fi
 _shown=${#_th[@]}; [ "$_shown" -gt 2 ] && _shown=2
 if [ "$_shown" -gt 0 ] && [ "${#_lc[@]}" -gt 0 ]; then _lc+=(""); _wh+=(""); _wx+=(""); _wt+=(""); fi
 for ((_i = 0; _i < _shown; _i++)); do _lc+=("${_tr[$_i]}"); _wh+=("${_th[$_i]}"); _wx+=("${_tx_[$_i]}"); _wt+=("${_tt[$_i]}"); done
@@ -593,4 +594,29 @@ if [ "${#_lc[@]}" -gt 0 ] || [ "${#_ml[@]}" -gt 0 ] || [ "${#_ul[@]}" -gt 0 ]; t
     _rule $(( _bw - 2 )); rows+=("${DIM}${_BL}${_RL}${_BR}${DIM:+$RST}")
   fi
 fi
+# The session row: its /rename name, else the title Claude Code keeps writing into the transcript, then the start of its
+# id. Only the transcript's tail is read, since this runs on every refresh and a transcript can pass 100MB. A turn can
+# push the title out of that tail, so the last title seen is kept in the state folder.
+if [ -n "$_sid" ]; then
+  _title_file="${_state:+$_state/title-$_sid}"
+  if [ -z "$_name" ]; then
+    [ -n "$_transcript" ] && [ -r "$_transcript" ] && _name=$(tail -c 2000000 "$_transcript" 2>/dev/null \
+      | grep -aF '"type":"ai-title"' | tail -n 1 | jq -r '.aiTitle // empty' 2>/dev/null | LC_ALL=C tr -d '[:cntrl:]')
+    if [ -n "$_name" ]; then
+      if [ -n "$_title_file" ] && [ -d "$_state" ] && [ "$(cat "$_title_file" 2>/dev/null)" != "$_name" ]; then
+        printf '%s' "$_name" > "$_title_file" 2>/dev/null
+      fi
+    elif [ -n "$_title_file" ] && [ -r "$_title_file" ]; then
+      _name=$(cat "$_title_file" 2>/dev/null)
+    fi
+  fi
+  _sid_short=${_sid:0:8}
+  if [ -n "$_name" ]; then
+    _fit "$_name" $(( _boxmax - ${#_sid_short} - 11 ))
+    rows+=("${DIM}session${DIM:+$RST} $_FO ${DIM}$_DOT $_sid_short${DIM:+$RST}")
+  else
+    rows+=("${DIM}session $_sid_short${DIM:+$RST}")
+  fi
+fi
+
 ( IFS=$'\n'; printf '%s' "${rows[*]}" )
