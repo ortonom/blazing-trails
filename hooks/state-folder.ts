@@ -13,7 +13,7 @@ export async function stateFolder($: EngineInterface) {
   })
 }
 
-// The state files no session has touched for KEEP_DAYS days: focus files, PR caches and worktree marks.
+// The state files no session has touched for KEEP_DAYS days: focus files, PR caches, session titles and worktree marks.
 // A hook has no file delete, so find removes them; a folder not yet made has nothing to prune.
 export async function pruneStateFiles($: EngineInterface) {
   const folder = await stateFolder($)
