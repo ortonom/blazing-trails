@@ -18,7 +18,7 @@ export async function stateFolder($: EngineInterface) {
 export async function pruneStateFiles($: EngineInterface) {
   const folder = await stateFolder($)
   if (!folder || !(await $.fs.stat(folder).then(() => true, () => false))) return
-  const names = ['focus-*.json', 'pr-*', 'worktrees-*'].flatMap((n, i) => (i ? ['-o', '-name', n] : ['-name', n]))
+  const names = ['focus-*.json', 'pr-*', 'title-*', 'worktrees-*'].flatMap((n, i) => (i ? ['-o', '-name', n] : ['-name', n]))
   // -mmin, as -mtime +14 counts whole days and keeps a file until its 15th.
   const run = await $.process.run(['find', folder, '-maxdepth', '1', '-type', 'f', '(', ...names, ')', '-mmin', `+${KEEP_DAYS * 24 * 60}`, '-delete'])
   if (run.exitCode !== 0) throw new Error(run.stderr.trim() || `find exited ${run.exitCode}`)
