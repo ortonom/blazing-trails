@@ -191,8 +191,9 @@ mkrepo other trunk
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/feature" "$FIX/mainrepo/.claude/worktrees/gone" "$FIX/other" \
   "$FIX/mainrepo/.claude/worktrees/second" > "$FIX/sl/worktrees-s1"
 PAYLOAD="{\"session_id\":\"s1\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"}}"
+# The session row has its own tests below; the box's layout is what these compare.
 rows_are() { # <desc> <expected rows, joined by newlines>
-  local out; out="$(render)"
+  local out; out="$(render | grep -v '^session ')"
   if [ "$out" = "$2" ]; then ok "$1"; else no "$1"; printf '       wanted <<%s>>\n       got    <<%s>>\n' "$2" "$out"; fi
 }
 rows_are "from the primary checkout each worktree the session opened is a row, its repo in the location column and its folder in the worktree column" "┌─ location ─┬─ worktree ────────┬─ model ─┐
@@ -555,17 +556,13 @@ missing "a branch that is worktree-<tree> is not repeated, even in the tree's ow
 printf -- '-\n' | tee "$FIX/sl/pr-mainrepo__worktree-same" "$FIX/sl/pr-mainrepo__feature" "$FIX/sl/pr-other__ext" >/dev/null
 box_of() { render | awk '/^┌/ { p = 1 } p'; }
 # displayed columns of each row: colour and link sequences take none, a character takes one
-cols() { sed -e $'s/\033\\[[0-9;]*m//g' -e $'s/\033\\][^\033]*\033\\\\//g' | LC_ALL=en_US.UTF-8 bash -c 'while IFS= read -r l; do echo ${#l}; done' | sort -u | tr '\n' ' '; }
+# The session row sits under the box and keeps its own width.
+cols() { sed -e $'s/\033\\[[0-9;]*m//g' -e $'s/\033\\][^\033]*\033\\\\//g' | grep -v '^session ' | LC_ALL=en_US.UTF-8 bash -c 'while IFS= read -r l; do echo ${#l}; done' | sort -u | tr '\n' ' '; }
 widths() { box_of | cols; }
 
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" > "$FIX/sl/worktrees-lay"
 rows_are "with no other worktree and no agent the box has its three panels" "┌─ location ─┬─ worktree ─┬─ model ─┐
 │ mainrepo   │ same       │ M       │
-└────────────┴────────────┴─────────┘"
-PAYLOAD="{\"session_id\":\"lay\",\"session_name\":\"fixer\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
-rows_are "a named session's name sits under the repo as bot: <name>" "┌─ location ─┬─ worktree ─┬─ model ─┐
-│ mainrepo   │ same       │ M       │
-│ bot: fixer │            │         │
 └────────────┴────────────┴─────────┘"
 PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-lay"
@@ -681,12 +678,38 @@ grep -q 'a-worktree-folder-named-much-too-long-t…' <<< "$_out" && ok "a long w
 grep -qF 'ctx 45%  ·  session 30% left (' <<< "$_out" && ok "usage keeps the long labels on one row when it fits in 100 columns" || no "usage keeps the long labels on one row when it fits in 100 columns"
 rm -f "$FIX/sl/worktrees-fp"
 
+echo "== the session row =="
+SR="$FIX/session-row"; mkdir -p "$SR"
+_sr() { printf '%s' "$1" > "$SR/t.jsonl"; }
+_sp() { PAYLOAD="{\"session_id\":\"31f41d3e-cab7-42b9-b35f-1b0f890cc8e0\",$1\"transcript_path\":\"$SR/t.jsonl\",\"workspace\":{\"current_dir\":\"/tmp\"},\"model\":{\"display_name\":\"M\"}}"; }
+rm -f "$FIX/sl/title-31f41d3e-cab7-42b9-b35f-1b0f890cc8e0"; _sr ''; _sp ''
+says "with no title yet the row is the start of the id" "session 31f41d3e"
+_sr '{"type":"ai-title","aiTitle":"Old title","sessionId":"x"}
+{"type":"user"}
+{"type":"ai-title","aiTitle":"Fix the login flow","sessionId":"x"}
+'
+says "the transcript's latest title names the session" "session Fix the login flow · 31f41d3e"
+_sr '{"type":"user"}
+'
+says "a title pushed out of the tail is kept" "session Fix the login flow · 31f41d3e"
+_sp '"session_name":"fixer",'
+says "a /rename name wins over the title" "session fixer · 31f41d3e"
+_sr '{"type":"ai-title","aiTitle":"Evil\u001b[31m title"}
+'; _sp ''
+says "control characters in a title are dropped" "session Evil[31m title · 31f41d3e"
+_sr "{\"type\":\"ai-title\",\"aiTitle\":\"$(printf 'x%.0s' {1..150})\"}
+"
+_row=$(render | tail -n 1)
+if [ "${#_row}" -le 100 ] && grep -q '31f41d3e$' <<< "$_row"; then ok "a long title ends in … inside the box's width and keeps the id"; else no "a long title ends in … inside the box's width and keeps the id"; printf '       got <<%s>>\n' "$_row"; fi
+PAYLOAD='{"workspace":{"current_dir":"/tmp"},"model":{"display_name":"M"}}'
+missing "no session id, no session row" "session "
+
 echo "== without a UTF-8 locale the box is ASCII and as wide =="
 PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo\"},\"model\":{\"display_name\":\"M\"},\"effort\":{\"level\":\"low\"},\"context_window\":{\"used_percentage\":5},\"rate_limits\":{\"five_hour\":{\"used_percentage\":10},\"seven_day\":{\"used_percentage\":20}}}"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-lay"
 ascii=$(printf '%s' "$PAYLOAD" | LC_ALL=C STATUSLINE_LOCALES=none NO_COLOR=1 STATUSLINE_STATE="${STATUSLINE_STATE-$FIX/sl}" bash "$SL" 2>/dev/null)
 LC_ALL=C grep -q '[^ -~]' <<< "$ascii" && no "no UTF-8 locale gives plain ASCII ($ascii)" || ok "no UTF-8 locale gives plain ASCII"
-[ "$(echo "$ascii" | awk '{ print length($0) }' | sort -u | tr '\n' ' ')" = "$(echo "$ascii" | wc -L | tr -d ' ') " ] && ok "the ASCII box is as wide on every line" || no "the ASCII box is as wide on every line"
+[ "$(echo "$ascii" | grep -v '^session ' | awk '{ print length($0) }' | sort -u | tr '\n' ' ')" = "$(echo "$ascii" | grep -v '^session ' | wc -L | tr -d ' ') " ] && ok "the ASCII box is as wide on every line" || no "the ASCII box is as wide on every line"
 utf=$(printf '%s' "$PAYLOAD" | LC_ALL=C NO_COLOR=1 STATUSLINE_STATE="${STATUSLINE_STATE-$FIX/sl}" bash "$SL" 2>/dev/null)
 grep -q '┌─ location' <<< "$utf" && ok "a C locale is switched to UTF-8 and draws the box characters" || no "a C locale is switched to UTF-8 and draws the box characters"
 STATUSLINE_STATE="$FIX/sl" fixture focus-file lay
