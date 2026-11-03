@@ -12,7 +12,7 @@
 #   ├─ usage ─────────┴──────────────────────────┴────────────────────────────┤
 #   │ ctx 45%  ·  session 93% left (3h48m)  ·  week 13% left (1d15h)          │
 #   └─────────────────────────────────────────────────────────────────────────┘
-#   location: the repo, then "bot: <session name>" when the session has one, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
+#   location: the repo, then "bot: <session name>", the name the session list shows, then a blank row and "+ repo" for each other worktree the session opened, in the rows of the worktree column.
 #   worktree: the session's worktree folder, or the branch in the main checkout, with ▸ branch when it is not worktree-<tree>,
 #   its PR and checks; then each other worktree's folder with its PR, two at most and then "+N more". Sub-agents stay
 #   off the box; the agent panel draws them.
@@ -75,6 +75,14 @@ fi
 # folder, and nothing is read or written.
 _state="${STATUSLINE_STATE:-${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/state}}"
 _state="${_state:-${HOME:+$HOME/.claude/state}}"
+
+# The session's name as the session list shows it: the payload carries session_name only once /rename names the
+# session, so without one the name comes from Claude Code's own record of the session, sessions/<pid>.json, whose
+# sessionId is this session's.
+if [ -z "$bot" ] && [ -n "$_sid" ]; then
+  _sessions="${CLAUDE_CONFIG_DIR:-${HOME:+$HOME/.claude}}/sessions"
+  [ -d "$_sessions" ] && bot=$(jq -r --arg sid "$_sid" 'select(.sessionId == $sid) | .name // empty' "$_sessions"/*.json 2>/dev/null | head -n 1)
+fi
 
 # NO_COLOR renders the line as plain text.
 if [ -n "${NO_COLOR:-}" ]; then DIM=""; YEL=""; RED=""; GRN=""; RST=""
@@ -503,7 +511,7 @@ _rule() { _spaces "$1"; _RL=${_SP// /$_H}; }
 # The panel titles; a rename is an edit here.
 _TITLE_LOCATION=location; _TITLE_WORKTREE=worktree; _TITLE_MODEL=model; _TITLE_USAGE=usage
 
-# The location and worktree panels' rows: the session's place, its name (absent until /rename names it), a blank row, then the other worktrees, two at most.
+# The location and worktree panels' rows: the session's place, its name as the session list shows it, a blank row, then the other worktrees, two at most.
 _lc=(); _wh=(); _wx=(); _wt=()
 if [ -n "$place_head" ]; then _lc+=("$place_head"); _wh+=("$place_tree"); _wx+=("$place_extra"); _wt+=("$place_tail"); fi
 if [ -n "$bot" ]; then _lc+=("bot: $bot"); _wh+=(""); _wx+=(""); _wt+=(""); fi

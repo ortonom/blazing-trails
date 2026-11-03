@@ -80,7 +80,7 @@ HP ■■■■■■■■■■■■■■□□□□□□ 7 · ⬆ CLEAR G
 └───────────────────────────────────────────┘
 ```
 
-The HP row, the plan files this session touched, then the repo, the session's `/rename` name as `bot:`, worktrees and their PRs, the model and effort, and
+The HP row, the plan files this session touched, then the repo, the session's name as the session list shows it, as `bot:`, worktrees and their PRs, the model and effort, and
 context and plan usage. The agent panel shows each running agent's folder, model and state.
 
 - Turn it on: `/ortonom:statusline`, once per machine. It points your `statusLine` setting at the copy the plugin

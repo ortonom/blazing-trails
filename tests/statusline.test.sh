@@ -567,6 +567,15 @@ rows_are "a named session's name sits under the repo as bot: <name>" "┌─ loc
 │ mainrepo   │ same       │ M       │
 │ bot: fixer │            │         │
 └────────────┴────────────┴─────────┘"
+mkdir -p "$CLAUDE_CONFIG_DIR/sessions"
+printf '{"sessionId":"other","name":"not-me-01"}' > "$CLAUDE_CONFIG_DIR/sessions/1.json"
+printf '{"sessionId":"lay","name":"mainrepo-02","nameSource":"derived"}' > "$CLAUDE_CONFIG_DIR/sessions/2.json"
+PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
+rows_are "an unrenamed session's name comes from the session list's record of it" "┌─ location ───────┬─ worktree ─┬─ model ─┐
+│ mainrepo         │ same       │ M       │
+│ bot: mainrepo-02 │            │         │
+└──────────────────┴────────────┴─────────┘"
+rm -r "$CLAUDE_CONFIG_DIR/sessions"
 PAYLOAD="{\"session_id\":\"lay\",\"workspace\":{\"current_dir\":\"$FIX/mainrepo/.claude/worktrees/same\"},\"model\":{\"display_name\":\"M\"}}"
 printf '%s\n' "$FIX/mainrepo/.claude/worktrees/same" "$FIX/mainrepo/.claude/worktrees/feature" > "$FIX/sl/worktrees-lay"
 rows_are "one other worktree is one row under a blank one, + repo beside its folder and state" "┌─ location ─┬─ worktree ────────┬─ model ─┐
