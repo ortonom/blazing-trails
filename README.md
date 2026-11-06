@@ -39,7 +39,7 @@ ortonom
 | group | skill | what it does | reach for it when |
 |---|---|---|---|
 | session | `cold-read` | a reader who has not seen the work proofreads, edits, reviews or checks a draft | a draft is about to go out |
-| session | `fingerprint` | names the established concept behind an idea you can describe but not name | you are about to coin a term |
+| session | `fingerprint` | finds the thing you need but can't name, from a problem, a loose spec or a near-miss definition, with one search | you know what you need but not what it is, or answers keep missing |
 | repo | `descatter` | gathers an idea stated in several files into one place | one rule lives in several places |
 | silent-failure | `silent-failure` | hunts controls that fail without telling anyone | something is slow or blocked and nothing says why |
 
