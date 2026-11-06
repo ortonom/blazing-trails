@@ -20,6 +20,7 @@ term for AI coding agent repeatedly offering partial fixes that miss the real pr
 - Open with `term for` only when the person asks what something is called. For any problem they describe, even one they ask why about, open with `standard practice for fixing`. Either wording returns the field's names, where a plain description of the problem returns how-to articles.
 - Name the field where the cause would live (software design, grammar, accounting), not where the symptom shows up: the search should land where the answer is, not where the pain is.
 - Write the features, not a guessed name or solution: a guess is the label the search has to get past.
+- Asked how two things differ, find the material difference: how each works underneath (what it runs, how it connects, what carries the data), from docs and source code. The features each site lists follow from that, so they are not the answer.
 - The near-miss is often what marketing copy says the noun is for: the fashionable answer a product page gives, not what research on how it works shows. The deciding feature usually sits in the qualifier (in text, faster, fewer tokens), so match on how each candidate works against every feature, that one included, and trust docs, engineering write-ups and measurements over product pages.
 
 Then answer with the names the results use, each with its source, and any name you already know that fits the same features, saying which came from the search and which from you.
