@@ -1,6 +1,6 @@
 ---
 name: fingerprint
-description: Find what a problem described in plain words is called, or what already solves it, with one search built from its features. Use when someone describes a problem, need or idea without its name, when answers keep missing and the same half-fix comes back, or before coining a term or building something that may already exist.
+description: Find the thing someone needs but can't name, from a problem, a loose spec or a definition that's not quite right, with one search built from its features. Use when they know what they need but not what it is, when answers keep missing and the same half-fix comes back, or before building something that may already exist.
 ---
 
 # Fingerprint
